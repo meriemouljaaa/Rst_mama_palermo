@@ -53,9 +53,10 @@ const socialLinks = [
 ];
 
 const contactInfo = {
-  address: '123 Rue de la Pizza, 75001 Casablanca, Maroc',
-  phone: '+212 623 45 67 89',
-  email: 'contact@mammapalermo.fr',
+  address: 'Residence Abdelhadi RDC, Centre, Bouskoura 27182',
+  phone1: '05 22 06 65 79',
+  phone2: '06 56 18 87 92',
+  email: 'contact@mammapalermo.ma',
   hours: {
     'Lundi - Vendredi': '9h00 - 18h00',
     'Samedi': '10h00 - 16h00',
@@ -213,7 +214,7 @@ export default function Contact() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-emerald-900 focus:outline-none transition-colors duration-200 font-forma_djr_display"
-                      placeholder="+33 1 23 45 67 89"
+                      placeholder="06 12 34 56 78"
                     />
                   </div>
                 </div>
@@ -292,10 +293,13 @@ export default function Contact() {
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="text-2xl">📞</div>
-                  <div>
+                  <div className="flex flex-col">
                     <h3 className="font-bold text-lg font-forma_djr_display mb-1">Téléphone</h3>
-                    <a href={`tel:${contactInfo.phone}`} className="font-forma_djr_display opacity-90 hover:opacity-100 transition-opacity duration-200 underline">
-                      {contactInfo.phone}
+                    <a href={`tel:${contactInfo.phone1.replace(/\s/g, '')}`} className="font-forma_djr_display opacity-90 hover:opacity-100 transition-opacity duration-200 underline">
+                      {contactInfo.phone1}
+                    </a>
+                    <a href={`tel:${contactInfo.phone2.replace(/\s/g, '')}`} className="font-forma_djr_display opacity-90 hover:opacity-100 transition-opacity duration-200 underline">
+                      {contactInfo.phone2}
                     </a>
                   </div>
                 </div>

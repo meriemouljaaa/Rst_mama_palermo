@@ -1,12 +1,13 @@
-import React from "react"; 
+import React from "react";
 import { Link } from "react-router-dom";
 
 const restaurantData = {
   id: 'main-restaurant',
-  name: 'MAMMA PALEMRO - Restaurant Principal',
-  address: '123 Rue de la Pizza, 75001 Casablanca, Maroc',
-  phone: '+212 623 45 67 89',
-  email: 'contact@mammapalermo.com',
+  name: 'MAMMA PALERMO - Restaurant Principal',
+  address: 'Residence Abdelhadi RDC, Centre, Bouskoura 27182',
+  phone1: '05 22 06 65 79',
+  phone2: '06 56 18 87 92',
+  email: 'contact@mammapalermo.ma',
   hours: {
     'Lundi': '11h30 - 14h30 • 18h30 - 22h30',
     'Mardi': '11h30 - 14h30 • 18h30 - 22h30',
@@ -29,8 +30,8 @@ export default function Carte() {
     window.open(restaurantData.mapUrl, "_blank");
   };
 
-  const callRestaurant = () => {
-    window.open(`tel:${restaurantData.phone}`, "_self");
+  const callRestaurant = (number) => {
+    window.open(`tel:${number.replace(/\s/g, '')}`, "_self");
   };
 
   const emailRestaurant = () => {
@@ -49,7 +50,7 @@ export default function Carte() {
             Venez découvrir nos lieux sincères
           </p>
         </div>
-        
+
         {/* Bouton de retour */}
         <Link
           to="/"
@@ -88,7 +89,7 @@ export default function Carte() {
                 className="w-full h-[400px] md:h-[500px]"
               />
             </div>
-            
+
             {/* Bouton Maps */}
             <div className="mt-6 text-center">
               <button
@@ -133,15 +134,24 @@ export default function Carte() {
                       Téléphone
                     </h4>
                     <p className="text-gray-600 font-forma_djr_display">
-                      {restaurantData.phone}
+                      {restaurantData.phone1} <br />
+                      {restaurantData.phone2}
                     </p>
                   </div>
-                  <button
-                    onClick={callRestaurant}
-                    className="text-white text-sm font-medium items-center bg-emerald-900 inline-flex justify-center min-h-[40px] min-w-[80px] border-emerald-900 px-4 py-2 rounded-[20px] border-2 font-forma_djr_display transition-colors duration-200 hover:bg-emerald-800"
-                  >
-                    Appeler
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => callRestaurant(restaurantData.phone1)}
+                      className="text-white text-xs font-medium items-center bg-emerald-900 inline-flex justify-center min-h-[35px] min-w-[80px] border-emerald-900 px-4 py-1 rounded-[20px] border-2 font-forma_djr_display transition-colors duration-200 hover:bg-emerald-800"
+                    >
+                      Appeler 1
+                    </button>
+                    <button
+                      onClick={() => callRestaurant(restaurantData.phone2)}
+                      className="text-white text-xs font-medium items-center bg-emerald-900 inline-flex justify-center min-h-[35px] min-w-[80px] border-emerald-900 px-4 py-1 rounded-[20px] border-2 font-forma_djr_display transition-colors duration-200 hover:bg-emerald-800"
+                    >
+                      Appeler 2
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -210,7 +220,7 @@ export default function Carte() {
               Voir la carte
             </Link>
             <button
-              onClick={callRestaurant}
+              onClick={() => callRestaurant(restaurantData.phone1)}
               className="text-white text-base font-medium items-center bg-emerald-900 inline-flex justify-center min-h-[60px] min-w-[200px] border-emerald-900 px-8 py-4 rounded-[30px] border-2 font-forma_djr_display transition-colors duration-200 hover:bg-emerald-800 md:text-xl md:min-h-[75px] md:py-6 md:rounded-[37.5px]"
             >
               Réserver

@@ -2,130 +2,123 @@ import React from "react";
 import { socialLinksData } from "../../data/socialLinksData";
 import { footerNavigationData } from "../../data/footerNavigationData";
 import { Link } from "react-router-dom";
-import { Link as ScrollLink } from "react-scroll"; // pour le scroll interne
-import pizzas from "../../assets/pizzas.jpg";
-import pizzaSlice from "../../assets/pizza_slice.jpg";
-import spaghetti from "../../assets/spaghetti.jpg";
-import restaurant from "../../assets/restaurant.jpg";
-import chef from "../../assets/chef.jpg";
+import { Link as ScrollLink } from "react-scroll";
+import whiteLogo from "../../assets/logos/mamma_palermo_white.png";
 
 export function Footer() {
   return (
-    <footer className="box-border">
-      {/* --- Suivez-nous --- */}
-      <div className="relative text-red-300 box-border z-[2] pt-[50px] md:pt-[130px]">
-        <h2 className="text-[40px] font-medium box-border tracking-[-2px] leading-10 text-center font-souvenir text-[#CD212A] md:text-[45px] md:tracking-[-2.25px] md:leading-[45px]">
-          Suivez-nous
-        </h2>
-        <p className="text-2xl font-medium box-border leading-[28.8px] text-center font-forma_djr_display text-[#CD212A] md:text-[26px] md:leading-[31.2px]">
-          @mammapalermo
-        </p>
+    <footer className="bg-emerald-950 text-emerald-50 relative overflow-hidden text-center md:text-left border-t border-emerald-900/50">
+      {/* Subtle Background Pattern */}
+      <div
+        className="absolute inset-0 opacity-5 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}
+      ></div>
 
-        <nav className="flex justify-center mt-5">
-          <ul className="flex flex-wrap gap-4 list-none p-0 items-center">
-            {socialLinksData.map((social) => {
-              const Icon = social.icon;
-              return (
-                <li key={social.id}>
-                  <a
-                    title={social.title}
-                    href={social.href}
-                    className="flex items-center justify-center w-12 h-12 text-[#CD212A] border border-[#CD212A] hover:bg-[#CD212A] hover:text-white rounded-full transition-colors"
-                  >
-                    <Icon size={24} />
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-12 py-16 lg:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
 
-      {/* --- Images décoratives --- */}
-      <div className="relative aspect-[375_/_560] box-border max-w-none w-full z-[1] overflow-hidden -mt-2.5 mx-auto md:aspect-[1250_/_850] md:mt-[-50px] md:max-w-[1250px] md:w-[calc(100%_-_60px)]">
-        <div className="absolute aspect-square box-border translate-x-[-150px] translate-y-[-150px] rotate-[-4deg] w-4/5 z-[1] left-2/4 top-2/4 md:translate-x-[-268px] md:translate-y-[-268px] md:rotate-[-4deg] md:w-[44%]">
-          <img alt="" src={chef} className="absolute object-cover w-full h-full" />
-        </div>
-        <div className="absolute aspect-square box-border left-[-6%] rotate-[5deg] w-[42%] z-[2] top-[8%] md:w-[24%] md:left-[9%]">
-          <img alt="" src={spaghetti} className="absolute object-cover w-full h-full" />
-        </div>
-        <div className="absolute aspect-square box-border right-[-15%] rotate-[-2deg] w-[42%] z-[3] top-[1%] md:w-[24%] md:right-[9%]">
-          <img alt="" src={pizzaSlice} className="absolute object-cover w-full h-full" />
-        </div>
-        <div className="absolute aspect-square box-border right-[-17%] rotate-[6deg] w-[42%] z-[4] bottom-[9%] md:w-[24%] md:right-[1.3%] md:bottom-[1.7%]">
-          <img alt="" src={pizzas} className="absolute object-cover w-full h-full" />
-        </div>
-        <div className="absolute aspect-square box-border left-[-12%] rotate-[-9deg] w-[42%] z-0 bottom-[2.6%] md:w-[24%] md:left-[1.8%]">
-          <img alt="" src={restaurant} className="absolute object-cover w-full h-full" />
-        </div>
-      </div>
-
-      {/* --- Contact --- */}
-      <div className="relative box-border w-full mt-[30px] px-5 md:mt-[150px] md:px-[30px]">
-        <div className="relative text-white items-center bg-[#CD212A] box-border gap-x-5 flex flex-col justify-normal max-w-[1080px] gap-y-5 w-full z-[2] mx-auto px-[30px] py-[50px] md:gap-x-[150px] md:flex-row md:justify-between md:gap-y-[150px] md:px-[150px] md:py-[130px]">
-          <address className="relative box-border basis-[0%] grow max-w-[310px] z-[2]">
-            <h2 className="text-[55px] font-medium box-border tracking-[-2px] leading-[60px] max-w-[260px] mb-[25px] px-[15px] font-souvenir md:text-[70px] md:tracking-[-2.25px] md:leading-[75px] md:mb-[50px] md:px-0">
-              Contactez nous.
-            </h2>
-            <p className="font-medium box-border px-[15px] font-forma_djr_display md:px-0">
-              mammapalerm.com
-            </p>
-          </address>
-          <div className="items-center box-border gap-x-2.5 flex flex-col gap-y-2.5 w-full md:w-auto">
-            <Link
-              to="/contact"
-              title="Contactez-nous"
-              className="text-base font-medium items-center bg-emerald-900 box-border gap-x-0 flex basis-[0%] grow justify-center leading-4 max-w-[260px] min-h-[60px] min-w-[200px] text-center uppercase align-middle w-full border-emerald-900 px-[53px] py-5 rounded-[30px] border-2 border-solid font-forma_djr_display md:text-xl md:leading-5 md:max-w-none md:min-h-[75px] md:py-[25.5px] md:rounded-[37.5px]"
-            >
-              Contactez-nous
+          {/* Column 1: Brand / Logo */}
+          <div className="space-y-6 flex flex-col items-center md:items-start">
+            <Link to="/" className="inline-block w-[180px] max-w-[200px]">
+              <img src={whiteLogo} alt="Mamma Palermo" className="w-full h-auto drop-shadow-lg" />
             </Link>
+            <p className="text-emerald-100/70 font-forma_djr_display text-sm leading-relaxed max-w-[280px] text-center md:text-left">
+              L'authentique goût de l'Italie au cœur de votre ville. Des plats préparés avec passion et des ingrédients frais de saison.
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* --- Footer Navigation --- */}
-      <div className="text-white bg-emerald-900 box-border">
-        <div className="items-center box-border gap-x-[30px] flex flex-col justify-normal max-w-[1520px] gap-y-[30px] w-full mx-auto pt-[50px] pb-[97.5px] px-5 md:gap-x-[75px] md:flex-row md:justify-between md:max-w-[1540px] md:gap-y-[75px] md:pt-[130px] md:pb-[325px] md:px-[30px]">
-          <a
-            href="/"
-            title="Cliquer ici pour aller sur la page d'accueil"
-            className="items-center box-border flex justify-center max-w-full"
-          >
-            <img
-              src="/public/logo.png"
-              alt="Logo"
-              className="hidden md:block w-[505px] max-w-full"
-            />
-          </a>
-
-          <nav className="box-border max-w-[700px] w-full md:max-w-[800px]">
-            <ul className="font-medium box-border gap-x-5 grid grid-flow-row grid-cols-[1fr_1fr] gap-y-5 pl-0 font-forma_djr_display md:grid-flow-col md:grid-cols-[repeat(3,1fr)] md:grid-rows-[repeat(4,1fr)]">
+          {/* Column 2: Navigation */}
+          <div className="flex flex-col items-center md:items-start md:pl-8">
+            <h3 className="font-souvenir text-xl text-white mb-6 uppercase tracking-wider">Menu</h3>
+            <ul className="space-y-4 font-forma_djr_display w-full flex flex-col items-center md:items-start">
               {footerNavigationData.map((item) => (
-                <li key={item.id} className="box-border text-left">
+                <li key={item.id}>
                   {item.href.startsWith("/") ? (
-                    // Liens vers une page
-                    <Link
-                      to={item.href}
-                      className="items-center box-border uppercase"
-                    >
+                    <Link to={item.href} className="text-emerald-100/70 hover:text-emerald-400 transition-colors uppercase text-sm tracking-widest relative group inline-flex justify-center md:justify-start">
                       {item.label}
+                      <span className="absolute -bottom-1 left-1/2 md:left-0 w-0 h-px bg-emerald-400 transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
                     </Link>
                   ) : (
-                    // Liens vers une section
                     <ScrollLink
                       to={`${item.id}-section`}
                       smooth={true}
                       duration={500}
                       offset={-70}
-                      className="cursor-pointer items-center box-border uppercase"
+                      className="cursor-pointer text-emerald-100/70 hover:text-emerald-400 transition-colors uppercase text-sm tracking-widest relative group inline-flex justify-center md:justify-start"
                     >
                       {item.label}
+                      <span className="absolute -bottom-1 left-1/2 md:left-0 w-0 h-px bg-emerald-400 transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
                     </ScrollLink>
                   )}
                 </li>
               ))}
             </ul>
-          </nav>
+          </div>
+
+          {/* Column 3: Contact */}
+          <div className="flex flex-col items-center md:items-start">
+            <h3 className="font-souvenir text-xl text-white mb-6 uppercase tracking-wider">Contact</h3>
+            <ul className="space-y-4 font-forma_djr_display text-emerald-100/70 text-sm flex flex-col items-center md:items-start">
+              <li className="flex items-center space-x-3">
+                <span className="text-emerald-400">📍</span>
+                <span>Residence Abdelhadi RDC, Centre, Bouskoura 27182</span>
+              </li>
+              <li className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-3">
+                  <span className="text-emerald-400">📞</span>
+                  <a href="tel:0522066579" className="hover:text-emerald-400 transition-colors">05 22 06 65 79</a>
+                </div>
+                <div className="flex items-center space-x-3 ml-7">
+                  <a href="tel:0656188792" className="hover:text-emerald-400 transition-colors">06 56 18 87 92</a>
+                </div>
+              </li>
+              <li className="flex items-center space-x-3">
+                <span className="text-emerald-400">✉️</span>
+                <a href="mailto:contact@mammapalermo.com" className="hover:text-emerald-400 transition-colors">contact@mammapalermo.com</a>
+              </li>
+            </ul>
+            <div className="mt-8">
+              <Link
+                to="/contact"
+                className="inline-block border border-emerald-400 text-emerald-400 hover:bg-emerald-400 hover:text-emerald-950 px-6 py-2 rounded-full uppercase text-[11px] tracking-[0.2em] transition-all font-forma_djr_display text-center"
+              >
+                Nous Trouver
+              </Link>
+            </div>
+          </div>
+
+          {/* Column 4: Socials */}
+          <div className="flex flex-col items-center md:items-start">
+            <h3 className="font-souvenir text-xl text-white mb-6 uppercase tracking-wider">Suivre</h3>
+            <p className="font-forma_djr_display text-sm text-emerald-100/70 mb-4 text-center md:text-left">
+              Rejoignez @mammapalermo sur nos réseaux pour suivre nos nouveautés.
+            </p>
+            <div className="flex justify-center md:justify-start space-x-3">
+              {socialLinksData.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={social.id}
+                    title={social.title}
+                    href={social.href}
+                    className="flex justify-center items-center w-10 h-10 rounded-full border border-emerald-800 text-emerald-300 hover:bg-emerald-400 hover:text-emerald-950 hover:border-emerald-400 transition-all duration-300"
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-16 pt-6 border-t border-emerald-800/50 flex flex-col md:flex-row justify-between items-center text-xs font-forma_djr_display text-emerald-500/80">
+          <p>© {new Date().getFullYear()} Mamma Palermo. Tous droits réservés.</p>
+          <div className="flex space-x-4 mt-4 md:mt-0">
+            <a href="#" className="hover:text-emerald-300 transition-colors">Mentions Légales</a>
+            <a href="#" className="hover:text-emerald-300 transition-colors">Confidentialité</a>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,128 +1,123 @@
 import React, { useRef } from 'react';
 import { productsData } from '../../data/productsData';
 import { Link } from "react-router-dom";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function ProductsSection() {
   const scrollContainerRef = useRef(null);
 
   const scrollLeft = () => {
-    console.log('Scroll left clicked');
     if (scrollContainerRef.current) {
       const cardWidth = window.innerWidth >= 768 ? 420 : 310;
-      scrollContainerRef.current.scrollLeft -= cardWidth;
+      scrollContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
-    console.log('Scroll right clicked');
     if (scrollContainerRef.current) {
       const cardWidth = window.innerWidth >= 768 ? 420 : 310;
-      scrollContainerRef.current.scrollLeft += cardWidth;
+      scrollContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="relative bg-white box-border z-[2]">
+    <div className="relative bg-stone-50 overflow-hidden py-[60px] md:py-[100px]">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+
       {/* Titre */}
-      <div className="relative box-border z-[2] px-5 py-[30px] md:px-[30px] md:py-[75px]">
-        <h2 className="relative text-[40px] font-medium box-border tracking-[-2px] leading-10 max-w-screen-md text-center mx-auto font-souvenir_std md:text-[45px] md:tracking-[-2.25px] md:leading-[45px]">
-          Nos produits
-        </h2>
-        <p className="text-2xl font-medium box-border leading-[28.8px] max-w-screen-md text-center mt-6 mx-auto font-forma_djr_display md:text-[26px] md:leading-[31.2px]">
-          Les meilleures recettes nécessitent les meilleurs produits.
-        </p>
+      <div className="relative z-10 px-5 md:px-[30px]">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <span className="text-[#C03434] font-bold tracking-[0.2em] uppercase text-sm mb-4 block">Notre Carte</span>
+          <h2 className="text-[40px] md:text-[55px] font-medium text-emerald-950 tracking-[-1.5px] leading-[1.1] mb-6 font-souvenir">
+            Découvrez nos créations
+          </h2>
+          <p className="text-xl md:text-2xl text-gray-600 font-forma_djr_display leading-relaxed">
+            Parce que les meilleures recettes nécessitent les meilleurs produits. Redécouvrez l'Italie à travers nos plats exclusifs.
+          </p>
+        </div>
       </div>
-      
+
       {/* Scroll Container */}
-      <div className="box-border max-w-full overflow-y-auto w-full mt-6">
-        <div className="box-border max-w-[1660px] w-full mx-auto px-5 md:max-w-[1680px] md:px-[30px]">
-          <div className="relative box-border list-none z-[1] mx-auto pl-[25px] md:pl-[30px]">
-            
-            {/* Produits */}
-            <div 
-              ref={scrollContainerRef}
-              className="flex h-[511px] w-full overflow-x-scroll overflow-y-hidden"
-              style={{ 
-                scrollbarWidth: 'none', 
-                msOverflowStyle: 'none',
-                scrollBehavior: 'smooth',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {productsData.map((product) => (
-                <figure 
-                  key={product.id} 
-                  className="flex-shrink-0 text-white font-medium bg-emerald-900 flex flex-col w-[290px] mr-5 py-5 font-forma_djr_display md:w-[400px]" 
-                  style={{ whiteSpace: 'normal' }}
-                >
-                  <div className="relative aspect-square bg-stone-200 box-border w-full">
-                    <img 
-                      alt={product.alt} 
-                      src={product.image} 
-                      className={product.imageClass} 
-                    />
-                  </div>
-                  <figcaption className="text-emerald-900 text-2xl bg-white box-border leading-[28.8px] text-center px-5 py-2.5 md:text-[26px] md:leading-[31.2px] mt-5">
-                    <a 
-                      href={product.href} 
-                      title={product.title} 
-                      className="text-2xl items-center box-border justify-center leading-[28.8px] outline-transparent md:text-[26px] md:leading-[31.2px]"
+      <div className="relative z-10 box-border max-w-full w-full">
+        <div className="box-border max-w-[1660px] w-full mx-auto px-5 md:max-w-[1680px] md:px-[30px] relative">
+
+          {/* Produits */}
+          <div
+            ref={scrollContainerRef}
+            className="flex w-full overflow-x-auto pb-12 pt-4 snap-x snap-mandatory"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}
+          >
+            {productsData.map((product) => (
+              <figure
+                key={product.id}
+                className="group relative flex-shrink-0 w-[290px] md:w-[380px] mr-6 bg-white rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 snap-center hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-gradient-to-br border-stone-100"
+              >
+                <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
+                  <div className="absolute inset-0 bg-emerald-950/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
+                  <img
+                    alt={product.alt}
+                    src={product.image}
+                    className={`${product.imageClass || 'w-full h-full object-cover'} group-hover:scale-110 transition-transform duration-700`}
+                  />
+                </div>
+
+                <figcaption className="p-8 relative">
+                  <div className="flex justify-between items-center bg-white">
+                    <a
+                      href={product.href}
+                      title={product.title}
+                      className="text-2xl font-bold text-gray-900 group-hover:text-emerald-900 transition-colors duration-300 font-souvenir"
                     >
                       {product.title}
                     </a>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-
-            {/* Boutons de scroll */}
-            <div className="absolute box-border gap-x-5 flex flex-col gap-y-5 left-0 top-[105px] md:top-[150px]">
-              <button 
-                type="button" 
-                title="Accéder à la slide précédente" 
-                onClick={scrollLeft}
-                className="text-base font-medium items-center bg-white gap-x-2.5 flex justify-center leading-4 min-h-[50px] min-w-[50px] cursor-pointer hover:bg-gray-50 transition-colors gap-y-2.5 text-center uppercase align-middle w-full z-10 border-emerald-900 p-0 rounded-[25px] border-solid font-forma_djr_display md:text-xl md:leading-5 md:min-h-[60px] md:min-w-[60px] md:w-auto md:rounded-[30px] border-2"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-emerald-900">
-                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button 
-                type="button" 
-                title="Accéder à la slide suivante" 
-                onClick={scrollRight}
-                className="text-base font-medium items-center bg-white gap-x-2.5 flex justify-center leading-4 min-h-[50px] min-w-[50px] cursor-pointer hover:bg-gray-50 transition-colors gap-y-2.5 text-center uppercase align-middle w-full z-10 border-emerald-900 p-0 rounded-[25px] border-solid font-forma_djr_display md:text-xl md:leading-5 md:min-h-[60px] md:min-w-[60px] md:w-auto md:rounded-[30px] border-2"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-emerald-900">
-                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
+                    <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-white transition-all duration-300 shrink-0">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
           </div>
-        </div>
-      </div>
-      
-      {/* CTA Découvrir */}
-      <div className="relative box-border z-[2] px-5 py-[30px] md:px-[30px] md:py-[75px]">
-        <div className="items-center box-border gap-x-6 flex flex-wrap justify-center max-w-screen-md gap-y-6 mx-auto">
-          <div title="Découvrir" className="box-border">
-            <Link
-              title="Découvrir" 
-              to="/menu" 
-              className="text-white text-base font-medium content-center items-center bg-emerald-900 box-border gap-x-0 inline-flex justify-center leading-4 min-h-[60px] min-w-[200px] gap-y-0 text-center uppercase align-middle w-full border-emerald-900 px-[53px] py-5 rounded-[30px] border-2 border-solid font-forma_djr_display md:text-xl md:leading-5 md:min-h-[75px] md:w-auto md:py-[25.5px] md:rounded-[37.5px] focus:outline-none"
+
+          {/* Boutons de scroll floatants */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-2 md:left-4 z-20">
+            <button
+              onClick={scrollLeft}
+              className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl text-emerald-900 hover:bg-emerald-900 hover:text-white hover:scale-110 transition-all duration-300 border border-stone-200"
             >
-              Découvrir
-            </Link>
+              <ChevronLeft className="w-6 h-6" />
+            </button>
           </div>
+          <div className="absolute top-1/2 -translate-y-1/2 right-2 md:right-4 z-20">
+            <button
+              onClick={scrollRight}
+              className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl text-emerald-900 hover:bg-emerald-900 hover:text-white hover:scale-110 transition-all duration-300 border border-stone-200"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* Masquer scrollbar */}
-      <style>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      {/* CTA Découvrir */}
+      <div className="relative z-10 px-5 mt-8 md:px-[30px]">
+        <div className="flex justify-center">
+          <Link
+            to="/menu"
+            className="group relative overflow-hidden text-emerald-900 bg-white border border-emerald-900 max-w-[300px] w-full px-12 py-5 rounded-full font-bold text-lg uppercase tracking-wider text-center inline-flex items-center justify-center gap-3 transition-colors duration-300 hover:text-white"
+          >
+            <span className="relative z-10 transition-colors duration-300 group-hover:text-white">Voir la carte</span>
+            <div className="absolute inset-0 bg-emerald-900 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 ease-out z-0"></div>
+          </Link>
+        </div>
+      </div>
+
     </div>
   );
 }

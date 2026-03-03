@@ -18,9 +18,9 @@ export function HeroSection({ scrollToAbout }) {
             <Sparkles className="w-4 h-4 text-emerald-300" />
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 font-souvenir drop-shadow-2xl">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-[0.2em] mb-6 font-syncopate drop-shadow-2xl">
             <span className="bg-gradient-to-r from-emerald-400 via-white/95 to-red-500 bg-clip-text text-transparent">
-              MAMMA PALERMO
+              MΛMMΛ PΛLERMO
             </span>
           </h1>
 

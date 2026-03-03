@@ -17,11 +17,11 @@ export const AboutSection = forwardRef(({ scrollToConcept }, ref) => {
               <span>Notre Histoire</span>
             </div>
 
-            <h2 className="text-[40px] md:text-[50px] lg:text-[60px] font-medium text-emerald-950 tracking-[-2px] leading-[1.1] font-souvenir relative">
+            <h2 className="text-[32px] md:text-[42px] lg:text-[52px] font-bold text-emerald-950 tracking-[0.15em] leading-[1.2] font-syncopate relative">
               Bienvenue chez <br />
-              <span className="text-[#C03434] relative inline-block">
-                MAMMA PALERMO
-                <svg className="absolute w-full h-3 -bottom-1 left-0 text-red-100" viewBox="0 0 100 10" preserveAspectRatio="none">
+              <span className="bg-gradient-to-r from-emerald-700 to-red-600 bg-clip-text text-transparent relative inline-block">
+                MΛMMΛ PΛLERMO
+                <svg className="absolute w-full h-3 -bottom-1 left-0 text-red-50" viewBox="0 0 100 10" preserveAspectRatio="none">
                   <path d="M0 5 Q 50 15, 100 5 L 100 10 L 0 10 Z" fill="currentColor"></path>
                 </svg>
               </span>

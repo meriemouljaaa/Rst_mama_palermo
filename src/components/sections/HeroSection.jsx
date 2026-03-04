@@ -47,7 +47,6 @@ export function HeroSection({ scrollToAbout }) {
 
         <img
           src={pizzaBackground}
-          alt="pizzacosy pizzeria restaurant a emporter, en livraison"
           className="absolute italic aspect-[auto_2288_/_1526] bg-no-repeat bg-cover box-border h-full max-w-full object-cover w-full z-[1] left-0 top-0 transition-transform duration-[20s] ease-linear hover:scale-110 object-[center_30%]"
         />
       </section>

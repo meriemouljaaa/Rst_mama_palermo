@@ -5,6 +5,9 @@ import cors from 'cors';
 import { createClient } from 'redis';
 import pg from 'pg';
 import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -20,6 +23,25 @@ const io = new Server(httpServer, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Serve the uploads directory statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Multer Setup
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const dir = path.join(process.cwd(), 'uploads');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        // Create unique filenames avoiding collisions
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 // PostgreSQL Pool
 const pool = new pg.Pool({
@@ -40,6 +62,21 @@ redisClient.on('error', (err) => console.log('Redis Client Error', err));
 // Basic Routes
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Backend is running' });
+});
+
+// Upload API
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        // Return the path that the frontend can use to load the image
+        const publicUrl = `http://localhost:3001/uploads/${req.file.filename}`;
+        res.json({ url: publicUrl });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to upload image' });
+    }
 });
 
 // Products API

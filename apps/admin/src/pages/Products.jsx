@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pencil, Trash2, Plus, X, Image as ImageIcon } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload } from 'lucide-react';
 
 const API_URL = 'http://localhost:3001/api/products';
 const CATEGORY_API_URL = 'http://localhost:3001/api/categories';
@@ -18,6 +18,7 @@ export default function Products() {
         image_url: '',
         is_available: true
     });
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -51,6 +52,7 @@ export default function Products() {
             setEditingProduct(null);
             setFormData({ name: '', description: '', price: '', category_id: categories.length > 0 ? categories[0].id : '', image_url: '', is_available: true });
         }
+        setSelectedFile(null);
         setIsModalOpen(true);
     };
 
@@ -59,13 +61,36 @@ export default function Products() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            let finalImageUrl = formData.image_url;
+
+            // Handle file upload first if a new file was selected
+            if (selectedFile) {
+                const uploadData = new FormData();
+                uploadData.append('image', selectedFile);
+
+                const uploadRes = await fetch('http://localhost:3001/api/upload', {
+                    method: 'POST',
+                    body: uploadData
+                });
+
+                if (uploadRes.ok) {
+                    const { url } = await uploadRes.json();
+                    finalImageUrl = url;
+                } else {
+                    console.error('Failed to upload image');
+                    alert('Image upload failed.');
+                    return; // Stop submission if image fails
+                }
+            }
+
             const method = editingProduct ? 'PUT' : 'POST';
             const url = editingProduct ? `${API_URL}/${editingProduct.id}` : API_URL;
 
             const payload = {
                 ...formData,
                 price: parseFloat(formData.price),
-                category: formData.category_id // Map to expected param
+                category: formData.category_id,
+                image_url: finalImageUrl // Use the uploaded URL or existing URL
             };
 
             await fetch(url, {
@@ -210,8 +235,29 @@ export default function Products() {
                                     <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow" placeholder="0.00" />
                                 </div>
                                 <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Image URL</label>
-                                    <input type="url" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow" placeholder="https://" />
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Product Image (Optional)</label>
+                                    <div className="flex items-center gap-3">
+                                        {formData.image_url && !selectedFile && (
+                                            <img src={formData.image_url} alt="Preview" className="w-10 h-10 rounded object-cover border border-gray-200 shrink-0" />
+                                        )}
+                                        {selectedFile && (
+                                            <div className="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center border border-red-200 shrink-0">
+                                                <ImageIcon size={16} />
+                                            </div>
+                                        )}
+                                        <div className="relative w-full">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={e => setSelectedFile(e.target.files[0])}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                            <div className="w-full border border-dashed border-gray-300 rounded-lg px-4 py-2 flex items-center justify-center gap-2 text-sm text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer bg-white">
+                                                <Upload size={16} /> {selectedFile ? selectedFile.name : 'Choose image...'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {!selectedFile && <input type="url" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} className="w-full mt-2 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow text-sm" placeholder="Or paste an image URL here" />}
                                 </div>
                             </div>
 

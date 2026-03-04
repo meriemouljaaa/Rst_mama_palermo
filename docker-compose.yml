@@ -37,6 +37,8 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - backend_uploads:/usr/src/app/uploads
     restart: unless-stopped
 
   frontend:
@@ -64,3 +66,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  backend_uploads:

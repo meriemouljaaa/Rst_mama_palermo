@@ -1,5 +1,5 @@
 import React from 'react';
-import pizzaBackground from "../../assets/pizza_background1.jpg"
+import pizzaBackground from "../../assets/Herosection.jpg"
 import { ChevronDown, Sparkles } from 'lucide-react';
 
 export function HeroSection({ scrollToAbout }) {

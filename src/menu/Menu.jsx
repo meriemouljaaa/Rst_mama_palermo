@@ -200,15 +200,16 @@ export default function Menu() {
                   <button
                     key={`side-${cat.id}`}
                     onClick={() => scrollToSectionMobile(cat.id)}
-                    className={`w-full flex flex-col items-center py-4 px-1 gap-[6px] border-l-4 transition-all duration-200 ${isActive
-                      ? 'border-[#C03434] bg-gray-50/80 opacity-100'
-                      : 'border-transparent opacity-70 hover:opacity-100'
+                    className={`relative w-full flex flex-col items-center py-5 px-1 gap-2 transition-all duration-300 ${isActive
+                      ? 'opacity-100 bg-gray-50'
+                      : 'opacity-60 hover:opacity-100 bg-white'
                       }`}
                   >
-                    <div className={`w-[54px] h-[54px] rounded-full overflow-hidden shrink-0 shadow-sm transition-transform duration-300 ${isActive ? 'scale-105' : ''}`}>
+                    {isActive && <div className="absolute left-0 top-[20%] bottom-[20%] w-1 bg-[#C03434] rounded-r-md"></div>}
+                    <div className={`w-12 h-12 relative rounded-full overflow-hidden shrink-0 transition-all duration-500 ${isActive ? 'scale-110 shadow-[0_5px_15px_-3px_rgba(192,52,52,0.3)] ring-2 ring-[#C03434] ring-offset-2 ring-offset-gray-50' : 'shadow-sm grayscale-[30%]'}`}>
                       <img src={cat.bannerImage} alt={shortName} className="w-full h-full object-cover" />
                     </div>
-                    <span className={`text-[11px] leading-tight text-center ${isActive ? 'font-bold text-gray-900' : 'font-semibold text-gray-600'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider leading-tight text-center ${isActive ? 'font-bold text-[#C03434]' : 'font-semibold text-gray-500'}`}>
                       {shortName}
                     </span>
                   </button>
@@ -299,19 +300,22 @@ export default function Menu() {
         </div>
 
         {/* Sticky Tab Navigation */}
-        <div className="sticky top-0 z-40 bg-[#FDFCFB]/80 backdrop-blur-xl border-b border-emerald-900/10 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]">
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl border-b border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-2 sm:space-x-8 overflow-x-auto py-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x pt-6">
+            <div className="flex items-center justify-start lg:justify-center space-x-6 sm:space-x-10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
               {menuCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => scrollToSectionDesktop(cat.id)}
-                  className={`flex-none snap-start whitespace-nowrap px-6 py-3 rounded-full text-base sm:text-lg font-bold transition-all duration-500 ring-1 ring-inset ${activeTabDesktop === cat.id
-                    ? "bg-emerald-950 text-white ring-emerald-950 shadow-[0_8px_20px_rgba(2,44,34,0.3)] scale-105"
-                    : "bg-white text-emerald-900/60 ring-emerald-900/10 hover:text-emerald-900 hover:ring-emerald-400 hover:bg-emerald-50"
+                  className={`relative flex-none snap-start whitespace-nowrap py-5 text-[12px] sm:text-[13px] uppercase tracking-[0.12em] font-bold transition-colors duration-300 ${activeTabDesktop === cat.id
+                      ? "text-[#C03434]"
+                      : "text-emerald-950/40 hover:text-emerald-950"
                     }`}
                 >
                   {cat.title}
+                  {activeTabDesktop === cat.id && (
+                    <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[#C03434] rounded-t-lg shadow-[0_-2px_6px_rgba(192,52,52,0.4)]"></span>
+                  )}
                 </button>
               ))}
             </div>

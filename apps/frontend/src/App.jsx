@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { HeroSection } from "./components/sections/HeroSection";
@@ -28,6 +29,19 @@ function MainPage() {
     }
   };
 
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    const socket = io("http://localhost:3001");
+
+    socket.on("orderStatusChanged", (data) => {
+      setNotification(`Order #${data.orderId} is now: ${data.status}`);
+      setTimeout(() => setNotification(null), 5000);
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-white font-forma_djr_display md:bg-[linear-gradient(to_right,rgb(255,255,255),rgb(255,255,255)_7.69231%,rgb(0,81,62)_7.69231%,rgb(0,81,62)_15.3846%,rgb(255,255,255)_15.3846%,rgb(255,255,255)_23.0769%,rgb(0,81,62)_23.0769%,rgb(0,81,62)_30.7692%,rgb(255,255,255)_30.7692%,rgb(255,255,255)_38.4615%,rgb(0,81,62)_38.4615%,rgb(0,81,62)_46.1538%,rgb(255,255,255)_46.1538%,rgb(255,255,255)_53.8462%,rgb(0,81,62)_53.8462%,rgb(0,81,62)_61.5385%,rgb(255,255,255)_61.5385%,rgb(255,255,255)_69.2308%,rgb(0,81,62)_69.2308%,rgb(0,81,62)_76.9231%,rgb(255,255,255)_76.9231%,rgb(255,255,255)_84.6154%,rgb(0,81,62)_84.6154%,rgb(0,81,62)_92.3077%,rgb(255,255,255)_92.3077%,rgb(255,255,255)_100%,rgb(0,81,62)_100%,rgb(0,81,62)_107.692%)]">
 
@@ -39,6 +53,11 @@ function MainPage() {
       <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
 
       <main>
+        {notification && (
+          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl font-bold transition-all duration-300">
+            🍕 {notification}
+          </div>
+        )}
         <HeroSection scrollToAbout={() => scrollToSection(aboutRef)} />
         <AboutSection ref={aboutRef} scrollToConcept={scrollToConcept} />
         <ConceptSection ref={conceptRef} />

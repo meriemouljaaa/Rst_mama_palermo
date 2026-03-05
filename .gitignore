@@ -129,3 +129,6 @@ dist
 # Vite
 .vite/
 dist-ssr/
+
+# Drafts
+drafts/

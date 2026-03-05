@@ -12,7 +12,9 @@ DROP TABLE IF EXISTS customers;
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT
+    description TEXT,
+    parent_id INTEGER REFERENCES categories (id),
+    image_url VARCHAR(500)
 );
 
 CREATE TABLE products (

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload, Tag, AlignLeft, Info, DollarSign, Filter, ChevronDown } from 'lucide-react';
 
 const API_URL = 'http://localhost:3001/api/products';
 const CATEGORY_API_URL = 'http://localhost:3001/api/categories';
@@ -9,6 +9,7 @@ export default function Products() {
     const [categories, setCategories] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState('all');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -18,6 +19,7 @@ export default function Products() {
         image_url: '',
         is_available: true
     });
+
     const [selectedFile, setSelectedFile] = useState(null);
 
     const fetchData = async () => {
@@ -63,7 +65,6 @@ export default function Products() {
         try {
             let finalImageUrl = formData.image_url;
 
-            // Handle file upload first if a new file was selected
             if (selectedFile) {
                 const uploadData = new FormData();
                 uploadData.append('image', selectedFile);
@@ -79,7 +80,7 @@ export default function Products() {
                 } else {
                     console.error('Failed to upload image');
                     alert('Image upload failed.');
-                    return; // Stop submission if image fails
+                    return;
                 }
             }
 
@@ -90,7 +91,7 @@ export default function Products() {
                 ...formData,
                 price: parseFloat(formData.price),
                 category: formData.category_id,
-                image_url: finalImageUrl // Use the uploaded URL or existing URL
+                image_url: finalImageUrl
             };
 
             await fetch(url, {
@@ -119,20 +120,87 @@ export default function Products() {
     };
 
     const getCategoryName = (id) => {
-        const cat = categories.find(c => c.id === id);
+        const cat = categories.find(c => c.id?.toString() === id?.toString());
         return cat ? cat.name : 'Uncategorized';
     };
 
+    const filteredProducts = selectedCategory === 'all'
+        ? products
+        : products.filter(p => {
+            const productCatId = p.category_id?.toString();
+            if (productCatId === selectedCategory.toString()) return true;
+
+            // Also include products from subcategories of the selected parent category
+            const productCat = categories.find(c => c.id?.toString() === productCatId);
+            return productCat?.parent_id?.toString() === selectedCategory.toString();
+        });
+
+    useEffect(() => {
+        console.log(`[Admin] Filtering by main category: ${selectedCategory}`);
+    }, [selectedCategory]);
+
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-900">Products</h2>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors"
-                >
-                    <Plus size={20} /> Add Product
-                </button>
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-8">
+                    <div className="flex flex-col">
+                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Products</h2>
+                        <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${products.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Inventory Live</span>
+                        </div>
+                    </div>
+
+                    <div className="relative group cursor-pointer">
+                        <div className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl shadow-sm transition-all border-2
+                            ${selectedCategory === 'all'
+                                ? 'bg-white border-gray-100 hover:border-red-600/30'
+                                : 'bg-red-50 border-red-200 shadow-red-50 hover:bg-white'}`}>
+                            <Filter size={16} className={selectedCategory === 'all' ? 'text-gray-400' : 'text-red-600'} />
+                            <div className="flex flex-col text-left">
+                                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest leading-none mb-0.5">Main Category Filter</span>
+                                <div className="relative flex items-center">
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="appearance-none pr-8 text-sm font-black text-gray-900 bg-transparent outline-none cursor-pointer min-w-[160px]"
+                                    >
+                                        <option value="all">Full Menu</option>
+                                        {categories.filter(c => !c.parent_id).map(cat => (
+                                            <option key={cat.id} value={cat.id}>
+                                                {cat.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown size={14} className={`absolute right-0 pointer-events-none transition-colors
+                                        ${selectedCategory === 'all' ? 'text-gray-300' : 'text-red-600'}`} />
+                                </div>
+                            </div>
+                        </div>
+                        {selectedCategory !== 'all' && (
+                            <button
+                                onClick={() => setSelectedCategory('all')}
+                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:scale-110 transition-transform animate-in zoom-in-50"
+                                title="Clear Filter"
+                            >
+                                <X size={10} strokeWidth={4} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <div className="text-right hidden sm:block mr-2">
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Catalog Size</p>
+                        <p className="text-sm font-black text-gray-900 leading-none">{filteredProducts.length} Items</p>
+                    </div>
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="bg-red-600 hover:bg-black text-white px-6 py-3.5 rounded-2xl flex items-center gap-2 font-black shadow-xl shadow-red-100 transition-all hover:-translate-y-1 active:scale-95 text-sm uppercase tracking-wider"
+                    >
+                        <Plus size={20} strokeWidth={3} /> Add Product
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -149,7 +217,7 @@ export default function Products() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {products.map(p => (
+                            {filteredProducts.map(p => (
                                 <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="p-4">
                                         {p.image_url ? (
@@ -169,7 +237,7 @@ export default function Products() {
                                             {getCategoryName(p.category_id)}
                                         </span>
                                     </td>
-                                    <td className="p-4 font-bold text-gray-900">${Number(p.price).toFixed(2)}</td>
+                                    <td className="p-4 font-bold text-gray-900">{Number(p.price).toFixed(2)} DH</td>
                                     <td className="p-4">
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${p.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                             {p.is_available ? 'Available' : 'Out of stock'}
@@ -185,10 +253,10 @@ export default function Products() {
                                     </td>
                                 </tr>
                             ))}
-                            {products.length === 0 && (
+                            {filteredProducts.length === 0 && (
                                 <tr>
                                     <td colSpan="6" className="p-12 text-center text-gray-500 italic">
-                                        No products found. Add some to build your menu!
+                                        No products found in this category.
                                     </td>
                                 </tr>
                             )}
@@ -198,83 +266,152 @@ export default function Products() {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="text-xl font-bold text-gray-900">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
-                            <button type="button" onClick={handleCloseModal} className="text-gray-400 hover:text-gray-900 transition-colors">
-                                <X size={24} />
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh] border border-gray-100 transform transition-all animate-in zoom-in-95 duration-300">
+                        {/* Header */}
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50/80">
+                            <div>
+                                <h3 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                                        {editingProduct ? <Pencil size={16} /> : <Plus size={18} />}
+                                    </div>
+                                    {editingProduct ? 'Update Product' : 'Create New Product'}
+                                </h3>
+                            </div>
+                            <button type="button" onClick={handleCloseModal} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-white transition-all">
+                                <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5 overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Product Name</label>
-                                    <input required type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow" placeholder="e.g. Pizza Margherita" />
-                                </div>
-                                <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
-                                    <select required value={formData.category_id} onChange={e => setFormData({ ...formData, category_id: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none bg-white">
-                                        <option value="" disabled>Select a category</option>
-                                        {categories.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
-                                <textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow resize-none" rows="3" placeholder="Briefly describe the ingredients..."></textarea>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price ($)</label>
-                                    <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow" placeholder="0.00" />
-                                </div>
-                                <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Product Image (Optional)</label>
-                                    <div className="flex items-center gap-3">
-                                        {formData.image_url && !selectedFile && (
-                                            <img src={formData.image_url} alt="Preview" className="w-10 h-10 rounded object-cover border border-gray-200 shrink-0" />
-                                        )}
-                                        {selectedFile && (
-                                            <div className="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center border border-red-200 shrink-0">
-                                                <ImageIcon size={16} />
+                        <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden">
+                            <div className="p-6 overflow-y-auto">
+                                <div className="flex flex-col gap-5">
+                                    {/* Top Section: Image and Basic Info */}
+                                    <div className="flex gap-6 items-start">
+                                        <div className="w-32 shrink-0">
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Visual</label>
+                                            <div className="relative aspect-square w-full rounded-xl bg-white border-2 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden group hover:border-red-400 transition-colors shadow-inner">
+                                                {selectedFile || formData.image_url ? (
+                                                    <img
+                                                        src={selectedFile ? URL.createObjectURL(selectedFile) : formData.image_url}
+                                                        alt="Preview"
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                    />
+                                                ) : (
+                                                    <div className="flex flex-col items-center text-gray-400">
+                                                        <ImageIcon size={24} />
+                                                        <span className="text-[9px] font-bold mt-1">Upload</span>
+                                                    </div>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={e => setSelectedFile(e.target.files[0])}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                />
                                             </div>
-                                        )}
-                                        <div className="relative w-full">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={e => setSelectedFile(e.target.files[0])}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            />
-                                            <div className="w-full border border-dashed border-gray-300 rounded-lg px-4 py-2 flex items-center justify-center gap-2 text-sm text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer bg-white">
-                                                <Upload size={16} /> {selectedFile ? selectedFile.name : 'Choose image...'}
+                                        </div>
+
+                                        <div className="flex-1 space-y-4">
+                                            <div>
+                                                <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                                    <Tag size={12} className="text-red-500" /> Item Title
+                                                </label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    value={formData.name}
+                                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none transition-all font-bold text-gray-900 bg-white shadow-sm text-sm"
+                                                    placeholder="e.g. Classic Pizza Margherita"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                                        <Info size={12} className="text-red-500" /> Category
+                                                    </label>
+                                                    <select
+                                                        required
+                                                        value={formData.category_id}
+                                                        onChange={e => setFormData({ ...formData, category_id: e.target.value })}
+                                                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none bg-white font-bold text-gray-900 shadow-sm cursor-pointer text-sm"
+                                                    >
+                                                        <option value="" disabled>Select</option>
+                                                        {categories.filter(c => !c.parent_id).map(parent => (
+                                                            <optgroup key={parent.id} label={parent.name}>
+                                                                <option value={parent.id}>{parent.name} (Main)</option>
+                                                                {categories.filter(sub => sub.parent_id === parent.id).map(sub => (
+                                                                    <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                                                ))}
+                                                            </optgroup>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                                        <DollarSign size={12} className="text-red-500" /> Price
+                                                    </label>
+                                                    <div className="relative">
+                                                        <input
+                                                            required
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={formData.price}
+                                                            onChange={e => setFormData({ ...formData, price: e.target.value })}
+                                                            className="w-full border border-gray-200 rounded-xl pl-4 pr-10 py-2.5 focus:ring-2 focus:ring-red-500 outline-none transition-all font-bold text-gray-900 bg-white shadow-sm text-sm"
+                                                            placeholder="0.00"
+                                                        />
+                                                        <span className="absolute right-3 top-2.5 text-[10px] font-black text-gray-400 uppercase">DH</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    {!selectedFile && <input type="url" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} className="w-full mt-2 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-shadow text-sm" placeholder="Or paste an image URL here" />}
+
+                                    <div>
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                            <AlignLeft size={12} className="text-red-500" /> Menu Description
+                                        </label>
+                                        <textarea
+                                            required
+                                            value={formData.description}
+                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                            className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none transition-all resize-none text-gray-900 text-sm font-bold bg-white shadow-sm"
+                                            rows="3"
+                                            placeholder="What are the ingredients or flavor profile?"
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-gray-900">Availability</span>
+                                            <span className="text-[10px] text-gray-500 font-bold italic">Instantly hide from storefront</span>
+                                        </div>
+                                        <div className="relative flex items-center">
+                                            <input type="checkbox" checked={formData.is_available} onChange={e => setFormData({ ...formData, is_available: e.target.checked })} className="peer sr-only" />
+                                            <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="pt-2">
-                                <label className="flex items-center gap-3 cursor-pointer group w-fit">
-                                    <div className="relative flex items-center">
-                                        <input type="checkbox" checked={formData.is_available} onChange={e => setFormData({ ...formData, is_available: e.target.checked })} className="peer sr-only" />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                    </div>
-                                    <span className="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Visible to Customers</span>
-                                </label>
-                            </div>
-
-                            <div className="mt-4 pt-6 border-t border-gray-100 flex justify-end gap-3">
-                                <button type="button" onClick={handleCloseModal} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                                <button type="submit" className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shadow-sm">
-                                    {editingProduct ? 'Save Changes' : 'Create Product'}
+                            {/* Footer */}
+                            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+                                <button
+                                    type="button"
+                                    onClick={handleCloseModal}
+                                    className="text-gray-400 font-black text-[10px] uppercase tracking-widest hover:text-gray-900 px-4 py-2 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-3 bg-red-600 hover:bg-black text-white font-black rounded-xl transition-all shadow-lg shadow-red-100 hover:shadow-black/10 hover:-translate-y-0.5 active:translate-y-0 text-[10px] tracking-widest uppercase"
+                                >
+                                    {editingProduct ? 'Commit Updates' : 'Publish Product'}
                                 </button>
                             </div>
                         </form>

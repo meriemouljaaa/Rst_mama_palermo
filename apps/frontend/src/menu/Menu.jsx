@@ -308,8 +308,8 @@ export default function Menu() {
                   key={cat.id}
                   onClick={() => scrollToSectionDesktop(cat.id)}
                   className={`relative flex-none snap-start whitespace-nowrap py-5 text-[12px] sm:text-[13px] uppercase tracking-[0.12em] font-bold transition-colors duration-300 ${activeTabDesktop === cat.id
-                      ? "text-[#C03434]"
-                      : "text-emerald-950/40 hover:text-emerald-950"
+                    ? "text-[#C03434]"
+                    : "text-emerald-950/40 hover:text-emerald-950"
                     }`}
                 >
                   {cat.title}

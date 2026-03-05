@@ -70,7 +70,7 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Total Revenue</p>
-                        <h3 className="text-2xl font-bold text-gray-900">${stats.totalRevenue.toFixed(2)}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{stats.totalRevenue.toFixed(2)} DH</h3>
                     </div>
                     <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
                         <DollarSign size={24} />
@@ -80,7 +80,7 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Today's Revenue</p>
-                        <h3 className="text-2xl font-bold text-gray-900">${stats.todayRevenue.toFixed(2)}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{stats.todayRevenue.toFixed(2)} DH</h3>
                     </div>
                     <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
                         <TrendingUp size={24} />
@@ -118,10 +118,10 @@ export default function Dashboard() {
                                 <Line type="monotone" dataKey="revenue" stroke="#dc2626" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                 <CartesianGrid stroke="#f3f4f6" strokeDasharray="5 5" vertical={false} />
                                 <XAxis dataKey="name" stroke="#9ca3af" axisLine={false} tickLine={false} />
-                                <YAxis stroke="#9ca3af" axisLine={false} tickLine={false} tickFormatter={(value) => `$${value}`} />
+                                <YAxis stroke="#9ca3af" axisLine={false} tickLine={false} tickFormatter={(value) => `${value} DH`} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value) => [`$${value}`, 'Revenue']}
+                                    formatter={(value) => [`${value} DH`, 'Revenue']}
                                 />
                             </LineChart>
                         </ResponsiveContainer>
@@ -144,11 +144,11 @@ export default function Dashboard() {
                                         <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleTimeString()}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-gray-900">${Number(order.total_amount).toFixed(2)}</p>
+                                        <p className="font-bold text-gray-900">{Number(order.total_amount).toFixed(2)} DH</p>
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                                                order.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                    order.status === 'Preparing' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-orange-100 text-orange-700'
+                                            order.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                order.status === 'Preparing' ? 'bg-blue-100 text-blue-700' :
+                                                    'bg-orange-100 text-orange-700'
                                             }`}>
                                             {order.status}
                                         </span>

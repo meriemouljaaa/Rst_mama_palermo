@@ -1,8 +1,10 @@
+name: mp
 version: '3.8'
 
 services:
-  postgres:
+  db:
     image: postgres:15-alpine
+    container_name: db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -16,6 +18,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: redis
     ports:
       - "6379:6379"
     volumes:
@@ -25,29 +28,39 @@ services:
   backend:
     build:
       context: ./apps/backend
+    container_name: backend
+    command: npm run dev
     ports:
       - "3001:3001"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: palermo_db
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: db
       REDIS_URL: redis://redis:6379
       PORT: 3001
     depends_on:
-      - postgres
+      - db
       - redis
     volumes:
-      - backend_uploads:/usr/src/app/uploads
+      - ./apps/backend:/app
+      - /app/node_modules
+      - ./apps/backend/uploads:/app/uploads
     restart: unless-stopped
 
   frontend:
     build:
       context: ./apps/frontend
+      target: build
+    container_name: frontend
+    command: npm run dev -- --host
     ports:
-      - "5173:80"
+      - "5173:5173"
     environment:
       VITE_API_URL: http://localhost:3001
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     restart: unless-stopped
@@ -55,15 +68,27 @@ services:
   admin:
     build:
       context: ./apps/admin
+      target: build
+    container_name: admin
+    command: npm run dev -- --host --port 5174
     ports:
-      - "5174:80"
+      - "5174:5174"
     environment:
       VITE_API_URL: http://localhost:3001
+    volumes:
+      - ./apps/admin:/app
+      - /app/node_modules
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
   postgres_data:
+    external: true
+    name: rst_mama_palermo_postgres_data
   redis_data:
+    external: true
+    name: rst_mama_palermo_redis_data
   backend_uploads:
+    external: true
+    name: rst_mama_palermo_backend_uploads

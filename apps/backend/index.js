@@ -43,6 +43,25 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Helper function to delete local images safely
+const deleteLocalImage = (imageUrl) => {
+    if (!imageUrl || !imageUrl.includes('/uploads/')) return;
+
+    try {
+        const filename = imageUrl.split('/uploads/')[1];
+        const filePath = path.join(process.cwd(), 'uploads', filename);
+
+        // Don't delete "system" images (seeds) if you want to keep them, 
+        // but for a clean app we delete everything that's in /uploads/
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`Deleted local image: ${filename}`);
+        }
+    } catch (err) {
+        console.error('Failed to delete local image:', err);
+    }
+};
+
 // PostgreSQL Pool
 const pool = new pg.Pool({
     user: process.env.POSTGRES_USER || 'postgres',
@@ -108,11 +127,22 @@ app.put('/api/products/:id', async (req, res) => {
     const { id } = req.params;
     const { name, description, price, category, image_url, is_available } = req.body;
     try {
+        // Fetch current product to find the old image
+        const oldProductRes = await pool.query('SELECT image_url FROM products WHERE id = $1', [id]);
+        const oldImageUrl = oldProductRes.rows[0]?.image_url;
+
         const result = await pool.query(
             'UPDATE products SET name = $1, description = $2, price = $3, category_id = $4, image_url = $5, is_available = $6 WHERE id = $7 RETURNING *',
             [name, description, price, category, image_url, is_available, id]
         );
+
         if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+
+        // If image has changed and old one was local, delete it
+        if (oldImageUrl && oldImageUrl !== image_url) {
+            deleteLocalImage(oldImageUrl);
+        }
+
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -123,8 +153,18 @@ app.put('/api/products/:id', async (req, res) => {
 app.delete('/api/products/:id', async (req, res) => {
     const { id } = req.params;
     try {
+        // Fetch product to get image URL before deleting
+        const productRes = await pool.query('SELECT image_url FROM products WHERE id = $1', [id]);
+        const imageUrl = productRes.rows[0]?.image_url;
+
         const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+
+        // Delete the associated image file if it exists
+        if (imageUrl) {
+            deleteLocalImage(imageUrl);
+        }
+
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -144,11 +184,11 @@ app.get('/api/categories', async (req, res) => {
 });
 
 app.post('/api/categories', async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, parent_id, image_url } = req.body;
     try {
         const result = await pool.query(
-            'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING *',
-            [name, description]
+            'INSERT INTO categories (name, description, parent_id, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
+            [name, description, parent_id || null, image_url || null]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -159,13 +199,23 @@ app.post('/api/categories', async (req, res) => {
 
 app.put('/api/categories/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, parent_id, image_url } = req.body;
     try {
+        // Fetch current category to find the old image
+        const oldCatRes = await pool.query('SELECT image_url FROM categories WHERE id = $1', [id]);
+        const oldImageUrl = oldCatRes.rows[0]?.image_url;
+
         const result = await pool.query(
-            'UPDATE categories SET name = $1, description = $2 WHERE id = $3 RETURNING *',
-            [name, description, id]
+            'UPDATE categories SET name = $1, description = $2, parent_id = $3, image_url = $4 WHERE id = $5 RETURNING *',
+            [name, description, parent_id || null, image_url || null, id]
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Category not found' });
+
+        // If image has changed and old one was local, delete it
+        if (oldImageUrl && oldImageUrl !== image_url) {
+            deleteLocalImage(oldImageUrl);
+        }
+
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -176,8 +226,18 @@ app.put('/api/categories/:id', async (req, res) => {
 app.delete('/api/categories/:id', async (req, res) => {
     const { id } = req.params;
     try {
+        // Fetch category to get image URL before deleting
+        const catRes = await pool.query('SELECT image_url FROM categories WHERE id = $1', [id]);
+        const imageUrl = catRes.rows[0]?.image_url;
+
         const result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING *', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Category not found' });
+
+        // Delete the associated image file if it exists
+        if (imageUrl) {
+            deleteLocalImage(imageUrl);
+        }
+
         res.json({ message: 'Category deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -214,7 +274,22 @@ app.post('/api/customers', async (req, res) => {
 app.get('/api/orders', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT o.*, c.first_name, c.last_name, c.email
+            SELECT 
+                o.*, 
+                c.first_name, 
+                c.last_name, 
+                c.email,
+                (
+                    SELECT json_agg(json_build_object(
+                        'id', oi.id,
+                        'product_name', p.name,
+                        'quantity', oi.quantity,
+                        'unit_price', oi.unit_price
+                    ))
+                    FROM order_items oi
+                    JOIN products p ON oi.product_id = p.id
+                    WHERE oi.order_id = o.id
+                ) as items
             FROM orders o
             JOIN customers c ON o.customer_id = c.id
             ORDER BY o.created_at DESC

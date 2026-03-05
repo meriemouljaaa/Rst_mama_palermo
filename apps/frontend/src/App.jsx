@@ -9,6 +9,7 @@ import { ProductsSection } from "./components/sections/ProductsSection";
 import { QualitySection } from "./components/sections/QualitySection";
 import { RestaurantsSection } from "./components/sections/RestaurantsSection";
 import { Footer } from "./components/layout/Footer";
+import { LoadingScreen } from "./components/ui/LoadingScreen";
 import Menu from "./menu/Menu";
 import Carte from "./carte/Carte";
 import Contact from "./contact/Contact"
@@ -16,6 +17,17 @@ import Contact from "./contact/Contact"
 function MainPage() {
   const aboutRef = useRef(null);
   const conceptRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulation of initial site loading
+  useEffect(() => {
+    // We add a delay for the animation to play out
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const scrollToSection = (ref) => {
     if (ref?.current) {
@@ -43,31 +55,33 @@ function MainPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-white font-forma_djr_display md:bg-[linear-gradient(to_right,rgb(255,255,255),rgb(255,255,255)_7.69231%,rgb(0,81,62)_7.69231%,rgb(0,81,62)_15.3846%,rgb(255,255,255)_15.3846%,rgb(255,255,255)_23.0769%,rgb(0,81,62)_23.0769%,rgb(0,81,62)_30.7692%,rgb(255,255,255)_30.7692%,rgb(255,255,255)_38.4615%,rgb(0,81,62)_38.4615%,rgb(0,81,62)_46.1538%,rgb(255,255,255)_46.1538%,rgb(255,255,255)_53.8462%,rgb(0,81,62)_53.8462%,rgb(0,81,62)_61.5385%,rgb(255,255,255)_61.5385%,rgb(255,255,255)_69.2308%,rgb(0,81,62)_69.2308%,rgb(0,81,62)_76.9231%,rgb(255,255,255)_76.9231%,rgb(255,255,255)_84.6154%,rgb(0,81,62)_84.6154%,rgb(0,81,62)_92.3077%,rgb(255,255,255)_92.3077%,rgb(255,255,255)_100%,rgb(0,81,62)_100%,rgb(0,81,62)_107.692%)]">
+    <>
+      {isLoading && <LoadingScreen />}
+      <div className={`relative min-h-screen w-full overflow-x-hidden bg-white font-forma_djr_display transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'} md:bg-[linear-gradient(to_right,rgb(255,255,255),rgb(255,255,255)_7.69231%,rgb(0,81,62)_7.69231%,rgb(0,81,62)_15.3846%,rgb(255,255,255)_15.3846%,rgb(255,255,255)_23.0769%,rgb(0,81,62)_23.0769%,rgb(0,81,62)_30.7692%,rgb(255,255,255)_30.7692%,rgb(255,255,255)_38.4615%,rgb(0,81,62)_38.4615%,rgb(0,81,62)_46.1538%,rgb(255,255,255)_46.1538%,rgb(255,255,255)_53.8462%,rgb(0,81,62)_53.8462%,rgb(0,81,62)_61.5385%,rgb(255,255,255)_61.5385%,rgb(255,255,255)_69.2308%,rgb(0,81,62)_69.2308%,rgb(0,81,62)_76.9231%,rgb(255,255,255)_76.9231%,rgb(255,255,255)_84.6154%,rgb(0,81,62)_84.6154%,rgb(0,81,62)_92.3077%,rgb(255,255,255)_92.3077%,rgb(255,255,255)_100%,rgb(0,81,62)_100%,rgb(0,81,62)_107.692%)]`}>
+        <div className="relative box-border">
+          <div className="absolute box-border h-px top-0"></div>
+        </div>
 
-      <div className="relative box-border">
-        <div className="absolute box-border h-px top-0"></div>
+        {/* On passe la fonction scroll et les refs au Header */}
+        <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
+
+        <main>
+          {notification && (
+            <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl font-bold transition-all duration-300">
+              🍕 {notification}
+            </div>
+          )}
+          <HeroSection scrollToAbout={() => scrollToSection(aboutRef)} />
+          <AboutSection ref={aboutRef} scrollToConcept={scrollToConcept} />
+          <ConceptSection ref={conceptRef} />
+          <ProductsSection />
+          <QualitySection />
+          <RestaurantsSection />
+        </main>
+
+        <Footer refs={{ aboutRef, conceptRef }} />
       </div>
-
-      {/* On passe la fonction scroll et les refs au Header */}
-      <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
-
-      <main>
-        {notification && (
-          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl font-bold transition-all duration-300">
-            🍕 {notification}
-          </div>
-        )}
-        <HeroSection scrollToAbout={() => scrollToSection(aboutRef)} />
-        <AboutSection ref={aboutRef} scrollToConcept={scrollToConcept} />
-        <ConceptSection ref={conceptRef} />
-        <ProductsSection />
-        <QualitySection />
-        <RestaurantsSection />
-      </main>
-
-      <Footer refs={{ aboutRef, conceptRef }} />
-    </div>
+    </>
   );
 }
 

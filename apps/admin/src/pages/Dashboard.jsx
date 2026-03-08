@@ -57,7 +57,7 @@ export default function Dashboard() {
     }, []);
 
     return (
-        <div className="space-y-6">
+        <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>

@@ -140,7 +140,7 @@ export default function Products() {
     }, [selectedCategory]);
 
     return (
-        <div>
+        <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
             <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-8">
                     <div className="flex flex-col">

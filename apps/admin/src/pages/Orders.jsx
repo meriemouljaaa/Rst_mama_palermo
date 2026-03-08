@@ -16,7 +16,9 @@ import {
     AlertCircle,
     X,
     User,
-    MapPin
+    MapPin,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 
 export default function Orders() {
@@ -25,6 +27,7 @@ export default function Orders() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [revealedPhones, setRevealedPhones] = useState({});
+    const [expandedOrders, setExpandedOrders] = useState({});
 
     const fetchOrders = async () => {
         try {
@@ -90,9 +93,9 @@ export default function Orders() {
     };
 
     return (
-        <div className="h-[calc(100vh-100px)] flex flex-col space-y-4">
+        <div className="h-full flex flex-col space-y-4 overflow-hidden">
             {/* Header Area - Compact */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 shrink-0">
                 <div>
                     <h2 className="text-2xl font-black text-gray-900 tracking-tight">Active Orders</h2>
                     <p className="text-xs text-gray-500 font-medium mt-0.5">Real-time fulfillment tracking.</p>
@@ -113,7 +116,7 @@ export default function Orders() {
             </div>
 
             {/* Quick Metrics - Compact */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
                 <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                     <div>
                         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active Status</p>
@@ -144,7 +147,7 @@ export default function Orders() {
             </div>
 
             {/* Kanban Board - Compact */}
-            <div className="flex-1 pb-2">
+            <div className="flex-1 min-h-0 pb-2">
                 <div className="flex h-full gap-4 pb-2">
                     {statusColumns.map((col) => {
                         const columnOrders = filteredOrders.filter(o => o.status === col.status);
@@ -172,93 +175,129 @@ export default function Orders() {
 
                                 {/* Orders List */}
                                 <div className="flex-1 overflow-y-auto p-2 space-y-2 no-scrollbar scroll-smooth">
-                                    {columnOrders.map(order => (
-                                        <div onClick={() => setSelectedOrder(order)} key={order.id} className="bg-white p-3.5 rounded-[16px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col gap-2 relative overflow-hidden group hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                                    {columnOrders.map(order => {
+                                        const isDelivered = col.status === 'Delivered';
+                                        const isExpanded = !isDelivered || !!expandedOrders[order.id];
 
-                                            {/* Top accent line based on status */}
-                                            <div className={`absolute top-0 left-0 w-full h-1.5 ${col.btnColor} opacity-80`}></div>
+                                        return (
+                                            <div
+                                                onClick={() => isExpanded ? setSelectedOrder(order) : setExpandedOrders(prev => ({ ...prev, [order.id]: true }))}
+                                                key={order.id}
+                                                className={`bg-white rounded-[16px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col relative overflow-hidden group transition-all duration-300 cursor-pointer ${isExpanded ? 'p-3.5 gap-2 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1' : 'p-2 py-3 hover:bg-gray-50'}`}
+                                            >
+                                                {/* Top accent line based on status */}
+                                                <div className={`absolute top-0 left-0 w-full h-1.5 ${col.btnColor} opacity-80`}></div>
 
-                                            {/* Order Identity */}
-                                            <div className="flex justify-between items-start mt-0.5">
-                                                <div className="flex gap-2 items-center">
-                                                    <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-lg">#{order.id}</span>
-                                                    <h5 className="font-extrabold text-gray-900 text-[14px] leading-tight truncate max-w-[120px]">{order.first_name} {order.last_name}</h5>
-                                                </div>
-                                                <span className="text-[11px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">
-                                                    {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                            </div>
-
-                                            {/* Order Details Snippet */}
-                                            <div className="space-y-2">
-                                                {/* Items List */}
-                                                <div className="bg-gray-50/80 p-2 rounded-xl border border-gray-100/80">
-                                                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200/60">
-                                                        <Package size={14} className="text-gray-400" />
-                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manifest</span>
+                                                {!isExpanded ? (
+                                                    <div className="flex items-center justify-between mt-1 px-1">
+                                                        <div className="flex items-center gap-2 overflow-hidden flex-1">
+                                                            <span className="text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md shrink-0">#{order.id}</span>
+                                                            <h5 className="font-extrabold text-gray-700 text-[13px] truncate">{order.first_name} {order.last_name}</h5>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <span className="text-[12px] font-black text-gray-900">{parseFloat(order.total_amount).toFixed(2)} DH</span>
+                                                            <ChevronDown size={14} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-2 max-h-[110px] overflow-y-auto pr-1 custom-scrollbar">
-                                                        {order.items?.map((item, idx) => (
-                                                            <div key={idx} className="flex justify-between items-start text-[11px]">
-                                                                <div className="flex gap-2 font-bold text-gray-800">
-                                                                    <span className="text-red-600 bg-red-50/80 border border-red-100 px-1 py-0.5 rounded-md text-[9px] leading-none shrink-0 h-fit mt-0.5">{item.quantity}x</span>
-                                                                    <span className="leading-tight">{item.product_name}</span>
-                                                                </div>
-                                                                <span className="text-[10px] text-gray-400 font-bold shrink-0 mt-0.5">{(item.unit_price * item.quantity).toFixed(2)}</span>
+                                                ) : (
+                                                    <>
+                                                        {/* Order Identity */}
+                                                        <div className="flex justify-between items-start mt-0.5">
+                                                            <div className="flex gap-2 items-center">
+                                                                <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-1 rounded-lg">#{order.id}</span>
+                                                                <h5 className="font-extrabold text-gray-900 text-[14px] leading-tight truncate max-w-[120px]">{order.first_name} {order.last_name}</h5>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[11px] font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                                                                    {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+                                                                {isDelivered && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setExpandedOrders(prev => ({ ...prev, [order.id]: false }));
+                                                                        }}
+                                                                        className="p-1 hover:bg-gray-100 rounded-md text-gray-400 transition-colors"
+                                                                    >
+                                                                        <ChevronUp size={14} strokeWidth={3} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
 
-                                                {/* Notes / Payment info */}
-                                                {(order.payment_method || order.notes) && (
-                                                    <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60 flex gap-2 items-start">
-                                                        <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                                                        <p className="text-[11px] text-amber-800 font-bold italic leading-snug">
-                                                            {order.payment_method ? `Paiement : ${order.payment_method}` : order.notes}
-                                                            {order.payment_method && order.notes && ` - ${order.notes}`}
-                                                        </p>
-                                                    </div>
+                                                        {/* Order Details Snippet */}
+                                                        <div className="space-y-2">
+                                                            {/* Items List */}
+                                                            <div className="bg-gray-50/80 p-2 rounded-xl border border-gray-100/80">
+                                                                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200/60">
+                                                                    <Package size={14} className="text-gray-400" />
+                                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manifest</span>
+                                                                </div>
+                                                                <div className="space-y-2 max-h-[110px] overflow-y-auto pr-1 custom-scrollbar">
+                                                                    {order.items?.map((item, idx) => (
+                                                                        <div key={idx} className="flex justify-between items-start text-[11px]">
+                                                                            <div className="flex gap-2 font-bold text-gray-800">
+                                                                                <span className="text-red-600 bg-red-50/80 border border-red-100 px-1 py-0.5 rounded-md text-[9px] leading-none shrink-0 h-fit mt-0.5">{item.quantity}x</span>
+                                                                                <span className="leading-tight">{item.product_name}</span>
+                                                                            </div>
+                                                                            <span className="text-[10px] text-gray-400 font-bold shrink-0 mt-0.5">{(item.unit_price * item.quantity).toFixed(2)}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Notes / Payment info */}
+                                                            {(order.payment_method || order.notes) && (
+                                                                <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60 flex gap-2 items-start">
+                                                                    <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                                                                    <p className="text-[11px] text-amber-800 font-bold italic leading-snug">
+                                                                        {order.payment_method ? `Paiement : ${order.payment_method}` : order.notes}
+                                                                        {order.payment_method && order.notes && ` - ${order.notes}`}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex items-center gap-1.5 pt-1">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setRevealedPhones(prev => ({ ...prev, [order.id]: true }));
+                                                                    }}
+                                                                    className="flex items-center gap-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-all"
+                                                                >
+                                                                    <Phone size={14} />
+                                                                    <span className="text-[11px] font-bold">
+                                                                        {revealedPhones[order.id] ? order.phone || 'No num' : 'Call'}
+                                                                    </span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Action & Total */}
+                                                        <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 mt-0.5">
+                                                            <div className="flex justify-start items-baseline gap-1">
+                                                                <span className="text-[15px] font-black text-gray-900 leading-none">{parseFloat(order.total_amount).toFixed(2)}</span>
+                                                                <span className="text-[9px] font-bold text-gray-400 leading-none">DH</span>
+                                                            </div>
+
+                                                            {col.nextStatus && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        updateStatus(order.id, col.nextStatus);
+                                                                    }}
+                                                                    className={`flex items-center gap-1.5 ${col.btnColor} text-white px-3 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${col.btnColor.split('-')[1]}-500`}
+                                                                >
+                                                                    {col.nextStatus === 'Preparing' ? 'START' : col.nextStatus === 'Out for Delivery' ? 'DISPATCH' : 'MARK'}
+                                                                    <ArrowRight size={12} strokeWidth={3} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </>
                                                 )}
-
-                                                <div className="flex items-center gap-1.5 pt-1">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setRevealedPhones(prev => ({ ...prev, [order.id]: true }));
-                                                        }}
-                                                        className="flex items-center gap-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-all"
-                                                    >
-                                                        <Phone size={14} />
-                                                        <span className="text-[11px] font-bold">
-                                                            {revealedPhones[order.id] ? order.phone || 'No num' : 'Call'}
-                                                        </span>
-                                                    </button>
-                                                </div>
                                             </div>
-
-                                            {/* Action & Total */}
-                                            <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 mt-0.5">
-                                                <div className="flex justify-start items-baseline gap-1">
-                                                    <span className="text-[15px] font-black text-gray-900 leading-none">{parseFloat(order.total_amount).toFixed(2)}</span>
-                                                    <span className="text-[9px] font-bold text-gray-400 leading-none">DH</span>
-                                                </div>
-
-                                                {col.nextStatus && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            updateStatus(order.id, col.nextStatus);
-                                                        }}
-                                                        className={`flex items-center gap-1.5 ${col.btnColor} text-white px-3 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${col.btnColor.split('-')[1]}-500`}
-                                                    >
-                                                        {col.nextStatus === 'Preparing' ? 'START' : col.nextStatus === 'Out for Delivery' ? 'DISPATCH' : 'MARK'}
-                                                        <ArrowRight size={12} strokeWidth={3} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
 
                                     {columnOrders.length === 0 && (
                                         <div className="h-28 flex flex-col items-center justify-center border-2 border-dashed border-gray-200/50 rounded-[20px] text-gray-300">
@@ -279,42 +318,42 @@ export default function Orders() {
                     <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-xl overflow-hidden transform transition-all scale-100 flex flex-col max-h-[90vh] md:max-h-[85vh] animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
 
                         {/* Modal Header */}
-                        <div className="p-6 sm:px-8 border-b border-gray-100 flex justify-between items-start bg-white relative overflow-hidden shrink-0">
-                            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-600 to-orange-500"></div>
+                        <div className="p-4 sm:px-6 border-b border-gray-100 flex justify-between items-start bg-white relative overflow-hidden shrink-0">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 to-orange-500"></div>
                             <div>
-                                <div className="flex items-center gap-3 mb-1 mt-1">
-                                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">Order Details</h3>
-                                    <span className="text-sm font-black text-red-600 bg-red-50 px-2.5 py-1 rounded-lg border border-red-100/50">#{selectedOrder.id}</span>
+                                <div className="flex items-center gap-2 mb-0.5 mt-0.5">
+                                    <h3 className="text-xl font-black text-gray-900 tracking-tight">Order Details</h3>
+                                    <span className="text-[12px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-lg border border-red-100/50">#{selectedOrder.id}</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                                    <Calendar size={12} strokeWidth={2.5} />
+                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <Calendar size={11} strokeWidth={2.5} />
                                     <span>{new Date(selectedOrder.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedOrder(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors border border-gray-100 shadow-sm mt-1">
-                                <X size={16} strokeWidth={2.5} />
+                            <button onClick={() => setSelectedOrder(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors border border-gray-100 shadow-sm mt-0.5">
+                                <X size={14} strokeWidth={2.5} />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 sm:px-8 overflow-y-auto custom-scrollbar flex-1 space-y-7 bg-gray-50/30">
+                        <div className="p-4 sm:px-6 overflow-y-auto custom-scrollbar flex-1 space-y-4 bg-gray-50/30">
 
                             {/* Customer Card */}
-                            <div className="bg-white rounded-[20px] p-5 border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] flex items-start gap-4 transition-all hover:shadow-[0_4px_20px_-3px_rgba(0,0,0,0.06)]">
-                                <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50 mt-0.5">
-                                    <User size={22} strokeWidth={2.5} />
+                            <div className="bg-white rounded-[16px] p-3.5 border border-gray-100 shadow-sm flex items-start gap-3 transition-all">
+                                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
+                                    <User size={18} strokeWidth={2.5} />
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="text-xl font-black text-gray-900 leading-tight mb-2.5">{selectedOrder.first_name} {selectedOrder.last_name}</h4>
-                                    <div className="space-y-2 text-[13px] text-gray-600 font-bold">
-                                        <div className="flex items-center gap-2.5 bg-gray-50/80 px-3 py-2 rounded-xl border border-gray-100/50 w-fit">
-                                            <Phone size={14} className="text-gray-400 shrink-0" strokeWidth={2.5} />
-                                            <span>{selectedOrder.phone || 'No phone number provided'}</span>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-lg font-black text-gray-900 leading-tight mb-1.5 truncate">{selectedOrder.first_name} {selectedOrder.last_name}</h4>
+                                    <div className="flex flex-wrap gap-2 text-[12px] text-gray-600 font-bold">
+                                        <div className="flex items-center gap-2 bg-gray-50/80 px-2.5 py-1 rounded-lg border border-gray-100/50 w-fit">
+                                            <Phone size={12} className="text-gray-400 shrink-0" strokeWidth={2.5} />
+                                            <span>{selectedOrder.phone || 'Aucun numéro'}</span>
                                         </div>
                                         {selectedOrder.address && (
-                                            <div className="flex items-start gap-2.5 bg-gray-50/80 px-3 py-2.5 rounded-xl border border-gray-100/50 line-clamp-2">
-                                                <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" strokeWidth={2.5} />
-                                                <span className="leading-snug">{selectedOrder.address}</span>
+                                            <div className="flex items-start gap-2 bg-gray-50/80 px-2.5 py-1 rounded-lg border border-gray-100/50 flex-1 min-w-[150px]">
+                                                <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" strokeWidth={2.5} />
+                                                <span className="leading-snug truncate">{selectedOrder.address}</span>
                                             </div>
                                         )}
                                     </div>
@@ -323,28 +362,28 @@ export default function Orders() {
 
                             {/* Order Manifest */}
                             <div>
-                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
-                                    <span className="w-3 h-[2px] bg-red-500/30 rounded-full"></span>
-                                    Order Manifest
+                                <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2 px-1">
+                                    <span className="w-2 h-[2px] bg-red-500/30 rounded-full"></span>
+                                    Fiche de Commande
                                     <span className="flex-1 h-[1px] bg-gray-200/50 ml-1"></span>
                                 </h4>
-                                <div className="bg-white rounded-[20px] border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] overflow-hidden">
-                                    <div className="divide-y divide-gray-100/80">
+                                <div className="bg-white rounded-[16px] border border-gray-100 shadow-sm overflow-hidden">
+                                    <div className="divide-y divide-gray-100/80 max-h-[200px] overflow-y-auto custom-scrollbar">
                                         {selectedOrder.items?.map((item, idx) => (
-                                            <div key={idx} className="flex justify-between items-center p-4 hover:bg-red-50/30 transition-colors group">
-                                                <div className="flex items-center gap-3.5">
-                                                    <span className="text-[13px] font-black text-red-600 bg-red-50 px-2 py-1 rounded-lg border border-red-100/50 min-w-[32px] text-center shadow-sm">{item.quantity}x</span>
-                                                    <span className="font-bold text-gray-800 text-[15px] group-hover:text-red-700 transition-colors">{item.product_name}</span>
+                                            <div key={idx} className="flex justify-between items-center p-3 hover:bg-red-50/30 transition-colors group">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="text-[11px] font-black text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md border border-red-100/50 min-w-[28px] text-center">{item.quantity}x</span>
+                                                    <span className="font-bold text-gray-800 text-[13px] group-hover:text-red-700 transition-colors truncate max-w-[200px]">{item.product_name}</span>
                                                 </div>
-                                                <span className="font-black text-gray-900 text-[15px]">{(item.unit_price * item.quantity).toFixed(2)} <span className="text-[10px] text-gray-400 font-bold ml-0.5">DH</span></span>
+                                                <span className="font-black text-gray-900 text-[13px]">{(item.unit_price * item.quantity).toFixed(2)} <span className="text-[9px] text-gray-400 font-bold">DH</span></span>
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="bg-gray-50/50 p-5 px-6 border-t border-gray-100 flex justify-between items-center">
-                                        <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-lg border border-gray-200/60 shadow-sm">Total Amount</span>
-                                        <div className="flex items-baseline gap-1.5">
-                                            <span className="text-3xl font-black text-red-600 tracking-tight">{parseFloat(selectedOrder.total_amount).toFixed(2)}</span>
-                                            <span className="text-sm font-bold text-red-400">DH</span>
+                                    <div className="bg-gray-50/50 p-3.5 px-5 border-t border-gray-100 flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-gray-200/60">Total</span>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-2xl font-black text-red-600 tracking-tight">{parseFloat(selectedOrder.total_amount).toFixed(2)}</span>
+                                            <span className="text-xs font-bold text-red-400">DH</span>
                                         </div>
                                     </div>
                                 </div>
@@ -353,26 +392,25 @@ export default function Orders() {
                             {/* Notes & Payment */}
                             {(selectedOrder.notes || selectedOrder.payment_method) && (
                                 <div>
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
-                                        <span className="w-3 h-[2px] bg-amber-500/30 rounded-full"></span>
-                                        Additional Info
+                                    <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2 px-1">
+                                        <span className="w-2 h-[2px] bg-amber-500/30 rounded-full"></span>
+                                        Note Client
                                         <span className="flex-1 h-[1px] bg-gray-200/50 ml-1"></span>
                                     </h4>
-                                    <div className="bg-amber-50/80 rounded-[20px] p-5 border border-amber-200/60 shadow-sm flex gap-3.5 items-start">
-                                        <div className="w-10 h-10 rounded-full bg-amber-100/80 text-amber-500 flex items-center justify-center shrink-0 border border-amber-200 shadow-sm">
-                                            <AlertCircle size={20} strokeWidth={2.5} />
+                                    <div className="bg-amber-50/80 rounded-[16px] p-3.5 border border-amber-200/60 shadow-sm flex gap-3 items-start">
+                                        <div className="w-8 h-8 rounded-full bg-amber-100/80 text-amber-500 flex items-center justify-center shrink-0 border border-amber-200 shadow-sm">
+                                            <AlertCircle size={16} strokeWidth={2.5} />
                                         </div>
-                                        <div className="space-y-3 pt-0.5 w-full">
+                                        <div className="space-y-2 pt-0.5 w-full">
                                             {selectedOrder.payment_method && (
-                                                <div className="bg-white/60 p-2.5 rounded-xl border border-amber-100 flex items-center gap-2.5 w-full">
-                                                    <span className="text-[9px] font-black text-amber-900/50 uppercase tracking-widest bg-amber-100 px-2 py-1 rounded-md shrink-0">Method</span>
-                                                    <span className="text-sm font-black text-amber-900 line-clamp-1">{selectedOrder.payment_method}</span>
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <span className="text-[8px] font-black text-amber-900/50 uppercase tracking-widest bg-amber-100 px-1.5 py-0.5 rounded-md shrink-0">Mode</span>
+                                                    <span className="text-xs font-black text-amber-900 truncate">{selectedOrder.payment_method}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.notes && (
-                                                <div className="bg-white/60 p-3 rounded-xl border border-amber-100 flex items-start gap-2 max-w-full">
-                                                    <span className="text-[9px] font-black text-amber-900/50 uppercase tracking-widest bg-amber-100 px-2 py-1 rounded-md shrink-0 mt-0.5">Notes</span>
-                                                    <p className="text-[13px] font-bold text-amber-900 leading-snug">{selectedOrder.notes}</p>
+                                                <div className="bg-white/60 p-2.5 rounded-xl border border-amber-100 max-w-full">
+                                                    <p className="text-[12px] font-bold text-amber-900 leading-snug">{selectedOrder.notes}</p>
                                                 </div>
                                             )}
                                         </div>

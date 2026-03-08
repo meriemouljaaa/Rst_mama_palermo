@@ -165,7 +165,7 @@ export default function Categories() {
         : 100;
 
     return (
-        <div className="space-y-6">
+        <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-6">
             {/* Page Header - Compact */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

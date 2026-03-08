@@ -16,103 +16,11 @@ import sodaImg from "../assets/products/soda.jpg";
 import jusImg from "../assets/products/jus.jpg";
 import cafeImg from "../assets/products/cafe.jpg";
 
-const menuCategories = [
-  {
-    id: "pizza",
-    title: "Nos Pizzas",
-    subtitle: "Artisanales & Cuites au feu de bois",
-    bannerImage: pizzaImg,
-    items: [
-      { id: "margherita", name: "Margherita di Bufala", description: "Sauce tomate San Marzano, mozzarella, basilic", price: "60 DH", isPopular: true, image: pizzaImg },
-      { id: "tartufo", name: "La Tartufo", description: "Crème truffe, champignons, fondue", price: "85 DH", image: pezziPizzaImg },
-      { id: "burrata", name: "Queen Burrata", description: "Sauce tomate, burrata, pesto", price: "90 DH", isPopular: true, image: pizzaImg },
-      { id: "diavola", name: "Diavola Piquante", description: "Sauce tomate, mozzarella, spianata", price: "75 DH", image: pezziPizzaImg },
-      { id: "quattro", name: "Quattro Formaggi", description: "Mozzarella, gorgonzola, taleggio", price: "80 DH", image: pizzaImg }
-    ]
-  },
-  {
-    id: "pasta",
-    title: "Pasta Fresca",
-    subtitle: "Pâtes fraîches faites maison",
-    bannerImage: pastaImg,
-    items: [
-      { id: "carbonara", name: "La Carbonara", description: "Spaghetti, guanciale, pecorino", price: "75 DH", isPopular: true, image: pastaImg },
-      { id: "truffle", name: "Rigatoni Truffe", description: "Crème truffe noire, champignons", price: "95 DH", image: pastaImg },
-      { id: "bolognese", name: "Pappardelle Ragù", description: "Sauce bolognaise mijotée 6h", price: "70 DH", image: pastaImg },
-      { id: "pesto", name: "Linguine Pesto", description: "Pesto basilic frais, pignons", price: "65 DH", image: pastaImg }
-    ]
-  },
-  {
-    id: "panuozzo",
-    title: "Panuozzo",
-    subtitle: "Sandwichs chauds italiens",
-    bannerImage: panuazzoImg,
-    items: [
-      { id: "pan_classico", name: "Il Classico", description: "Prosciutto, bufala, roquette", price: "55 DH", image: panuazzoImg },
-      { id: "pan_pollo", name: "Pollo & Pesto", description: "Poulet grillé, provolone", price: "60 DH", isPopular: true, image: panuazzoImg },
-      { id: "pan_vege", name: "Verdure Grigliate", description: "Légumes grillés, crème basilic", price: "50 DH", image: panuazzoImg },
-    ]
-  },
-  {
-    id: "plats",
-    title: "Plats",
-    subtitle: "L'excellence en plat principal",
-    bannerImage: platPouletImg,
-    items: [
-      { id: "milanese", name: "Escalope Milanese", description: "Veau pané, linguine napolitaine", price: "95 DH", isPopular: true, image: platPouletImg },
-      { id: "saumon", name: "Pavé Saumon", description: "Saumon rôti, risotto citron", price: "120 DH", image: platPoissonImg },
-      { id: "pollo_funghi", name: "Poulet Champis", description: "Suprême sauce forestière", price: "85 DH", image: platPouletImg }
-    ]
-  },
-  {
-    id: "burgers",
-    title: "Burgers",
-    subtitle: "Pain brioché boucher",
-    bannerImage: burgerImg,
-    items: [
-      { id: "mamma_burger", name: "Signature Mamma", description: "Viande 180g, foie gras, roquette", price: "110 DH", isPopular: true, image: burgerImg },
-      { id: "italian_burger", name: "Italiano Vero", description: "Steak, gorgonzola, pancetta", price: "85 DH", image: burgerImg },
-      { id: "chicken_burger", name: "Crispy Pollo", description: "Poulet crispy, coleslaw maison", price: "75 DH", image: burgerImg }
-    ]
-  },
-  {
-    id: "salades",
-    title: "Salades",
-    subtitle: "Pour commencer en fraîcheur",
-    bannerImage: saladesImg,
-    items: [
-      { id: "cesar", name: "César Italienne", description: "Sucrine, poulet rôti, parmesan", price: "60 DH", image: saladesImg },
-      { id: "burrata_salad", name: "Burrata Fresca", description: "Burrata 125g, déclinaison tomates", price: "75 DH", isPopular: true, image: saladesImg },
-      { id: "frites_truffes", name: "Frites Truffes", description: "Frites allumettes, huile truffe", price: "40 DH", image: fritesImg }
-    ]
-  },
-  {
-    id: "dolce",
-    title: "Desserts",
-    subtitle: "Les douceurs pour finir en beauté",
-    bannerImage: dolceImg,
-    items: [
-      { id: "tiramisu", name: "Tiramisu Nonna", description: "Café espresso et mascarpone", price: "45 DH", isPopular: true, image: dolceImg },
-      { id: "panna_cotta", name: "Panna Cotta", description: "Infusée à la vanille, coulis", price: "40 DH", image: dolceImg },
-      { id: "cheesecake", name: "Cheesecake", description: "Crème de pistache et spéculoos", price: "55 DH", image: dolceImg }
-    ]
-  },
-  {
-    id: "boissons",
-    title: "Boissons",
-    subtitle: "Rafraîchissements et boissons chaudes",
-    bannerImage: jusImg,
-    items: [
-      { id: "mojito", name: "Virgin Mojito", description: "Citron vert, menthe fraîche", price: "35 DH", image: jusImg },
-      { id: "cafe_italiano", name: "Espresso", description: "Café 100% Arabica", price: "15 DH", image: cafeImg },
-      { id: "soda_italien", name: "Limonade", description: "Limonade bio pétillante", price: "25 DH", image: sodaImg }
-    ]
-  }
-];
+
 
 export default function Menu() {
-  const [activeTabDesktop, setActiveTabDesktop] = useState(menuCategories[0].id);
-  const [activeTabMobile, setActiveTabMobile] = useState(menuCategories[0].id);
+  const [activeTabDesktop, setActiveTabDesktop] = useState(null);
+  const [activeTabMobile, setActiveTabMobile] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [cart, setCart] = useState(() => {
@@ -123,21 +31,100 @@ export default function Menu() {
 
   const [cartAnimations, setCartAnimations] = useState([]);
   const [isCartBumping, setIsCartBumping] = useState(false);
+  const [dbCategories, setDbCategories] = useState([]);
+  const [dbProducts, setDbProducts] = useState([]);
+  const [dynamicMenu, setDynamicMenu] = useState([]);
   const [productMapping, setProductMapping] = useState({});
 
+  // Metadata mapping for aesthetic consistency
+  const CATEGORY_STYLE_META = {
+    "pizzas": { banner: pizzaImg, title: "Nos Pizzas", subtitle: "Artisanales & Cuites au feu de bois", icon: pizzaImg },
+    "pastas": { banner: pastaImg, title: "Pasta Fresca", subtitle: "Pâtes fraîches faites maison", icon: pastaImg },
+    "desserts": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté", icon: dolceImg },
+    "dolce": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté", icon: dolceImg },
+    "boissons": { banner: sodaImg, title: "Rafraîchissements", subtitle: "Boissons fraîches & jus naturels", icon: sodaImg },
+    "plats": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal", icon: platPouletImg },
+    "burgers & sandwiches": { banner: burgerImg, title: "Gourmet Burgers", subtitle: "Pain brioché & sandwichs italiens", icon: burgerImg },
+    "nos burgers": { banner: burgerImg, title: "Nos Burgers", subtitle: "Bœuf & Poulet", icon: burgerImg },
+    "panuozzo sandwiches": { banner: panuazzoImg, title: "Panuozzo", subtitle: "L'authentique sandwich napolitain", icon: panuazzoImg },
+    "antipasti & entrées": { banner: saladesImg, title: "Antipasti", subtitle: "Pour commencer en gourmandise", icon: saladesImg },
+    "salades": { banner: saladesImg, title: "Insalate", subtitle: "Fraîcheur & saveurs méditerranéennes", icon: saladesImg }
+  };
+
   useEffect(() => {
-    fetch("http://localhost:3001/api/products")
-      .then(r => r.json())
-      .then(data => {
+    const fetchData = async () => {
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          fetch("http://localhost:3001/api/products"),
+          fetch("http://localhost:3001/api/categories")
+        ]);
+        const products = await prodRes.json();
+        const categories = await catRes.json();
+
+        setDbProducts(products);
+        setDbCategories(categories);
+
+        // Build product mapping for checkout ID linking
         const mapping = {};
-        data.forEach(p => {
-          // Clean the name (e.g. "58. MARGHERITA" -> "MARGHERITA")
+        products.forEach(p => {
           const cleanName = p.name.replace(/^\d+\.\s*/, '').toLowerCase().trim();
           mapping[cleanName] = p.id;
         });
         setProductMapping(mapping);
-      })
-      .catch(err => console.error("Failed to fetch product mapping", err));
+
+        // Build dynamic menu structure
+        const availableProducts = products.filter(p => p.is_available);
+
+        // Group by main parent categories
+        const rootCategories = categories.filter(c => !c.parent_id);
+        const dynamicStructure = rootCategories.map(root => {
+          // Find all subcategories for this root
+          const subIds = categories
+            .filter(c => c.id === root.id || c.parent_id === root.id)
+            .map(c => c.id);
+
+          const items = availableProducts
+            .filter(p => subIds.includes(p.category_id))
+            .map(p => ({
+              id: p.id,
+              name: p.name,
+              description: p.description,
+              price: `${p.price} DH`,
+              image: p.image_url || null, // Will fallback to default in render
+              isPopular: false // Could be based on ranking later
+            }));
+
+          // Only include categories that have items
+          if (items.length === 0) return null;
+
+          const metaKey = root.name.toLowerCase();
+          const style = CATEGORY_STYLE_META[metaKey] || {
+            banner: root.image_url || burgerImg,
+            title: root.name,
+            subtitle: root.description || "Découvrez notre sélection",
+            icon: root.image_url || burgerImg
+          };
+
+          return {
+            id: `cat-${root.id}`,
+            title: style.title,
+            subtitle: style.subtitle,
+            bannerImage: style.banner,
+            items: items
+          };
+        }).filter(Boolean);
+
+        if (dynamicStructure.length > 0) {
+          setDynamicMenu(dynamicStructure);
+          setActiveTabDesktop(dynamicStructure[0].id);
+          setActiveTabMobile(dynamicStructure[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch menu data", err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Checkout states
@@ -298,8 +285,8 @@ export default function Menu() {
   const handleMobileScroll = () => {
     if (!rightScrollRef.current) return;
 
-    const sections = menuCategories.map(c => document.getElementById(`mobile-${c.id}`));
-    let currentCat = menuCategories[0].id;
+    const sections = dynamicMenu.map(c => document.getElementById(`mobile-${c.id}`));
+    let currentCat = dynamicMenu.length > 0 ? dynamicMenu[0].id : null;
 
     for (const section of sections) {
       if (!section) continue;
@@ -309,7 +296,7 @@ export default function Menu() {
       }
     }
 
-    if (activeTabMobile !== currentCat) {
+    if (currentCat && activeTabMobile !== currentCat) {
       setActiveTabMobile(currentCat);
     }
   };
@@ -339,18 +326,11 @@ export default function Menu() {
           {/* Left Sidebar (Categories) */}
           <div className="w-[85px] bg-white border-r border-gray-100 overflow-y-auto no-scrollbar pb-24 shrink-0 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
             <div className="flex flex-col">
-              {menuCategories.map((cat) => {
+              {dynamicMenu.map((cat) => {
                 const isActive = activeTabMobile === cat.id;
                 // Simpler shorter names for tight vertical sidebar
-                let shortName = cat.title;
-                if (cat.id === "pasta") shortName = "Pasta";
-                if (cat.id === "panuozzo") shortName = "Panuozzo";
-                if (cat.id === "plats") shortName = "Plats";
-                if (cat.id === "burgers") shortName = "Burgers";
-                if (cat.id === "salades") shortName = "Salades";
-                if (cat.id === "dolce") shortName = "Desserts";
-                if (cat.id === "boissons") shortName = "Boissons";
-                if (cat.id === "pizza") shortName = "Pizzas";
+                const nameParts = cat.title.split(' ');
+                const shortName = nameParts[nameParts.length - 1];
 
                 return (
                   <button
@@ -381,7 +361,7 @@ export default function Menu() {
             onScroll={handleMobileScroll}
           >
             <div className="space-y-6">
-              {menuCategories.map((cat) => (
+              {dynamicMenu.map((cat) => (
                 <div key={`mobile-${cat.id}`} id={`mobile-${cat.id}`} className="scroll-mt-4">
 
                   {/* Category Title Subtle Divider */}
@@ -402,7 +382,7 @@ export default function Menu() {
 
                         {/* Image cropped realistically */}
                         <div className="w-full aspect-square mb-2 relative overflow-hidden rounded-[8px] bg-gray-50 shrink-0">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                          <img src={item.image || burgerImg} alt={item.name} className="w-full h-full object-contain p-1" />
                         </div>
 
                         {/* Text Content */}
@@ -470,7 +450,7 @@ export default function Menu() {
         <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl border-b border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-start lg:justify-center space-x-6 sm:space-x-10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
-              {menuCategories.map((cat) => (
+              {dynamicMenu.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => scrollToSectionDesktop(cat.id)}
@@ -491,7 +471,7 @@ export default function Menu() {
 
         {/* Menu Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
-          {menuCategories.map((category, index) => (
+          {dynamicMenu.map((category, index) => (
             <section id={category.id} key={category.id} className="scroll-mt-32">
 
               {/* Category Header Layout */}
@@ -508,7 +488,7 @@ export default function Menu() {
                     {category.subtitle}
                   </p>
                 </div>
-                <div className="flex-1 w-full h-[160px] md:h-[220px] relative rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] group isolate">
+                <div className="flex-1 w-full h-[160px] md:h-[220px] relative rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] group isolate bg-emerald-50">
                   <div className="absolute inset-0 bg-emerald-950/20 group-hover:bg-transparent transition-colors duration-700 z-10 pointer-events-none"></div>
                   <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 rounded-[2.5rem]"></div>
                   <img
@@ -536,9 +516,8 @@ export default function Menu() {
                     )}
 
                     <div className="flex flex-col sm:flex-row items-start lg:items-center gap-3 mb-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_5px_10px_-2px_rgba(0,0,0,0.1)] shrink-0 border-2 border-white ring-1 ring-emerald-900/10 group-hover:ring-emerald-400 group-hover:border-emerald-50 transition-all duration-500 relative">
-                        <div className="absolute inset-0 bg-emerald-900/10 mix-blend-multiply group-hover:opacity-0 transition-opacity duration-500 z-10 pointer-events-none"></div>
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover transform group-hover:rotate-6 group-hover:scale-110 transition-transform duration-700 ease-out" />
+                      <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_5px_10px_-2px_rgba(0,0,0,0.1)] shrink-0 border-2 border-white ring-1 ring-emerald-900/10 group-hover:ring-emerald-400 group-hover:border-emerald-50 transition-all duration-500 relative bg-emerald-50">
+                        <img src={item.image || burgerImg} alt={item.name} className="w-full h-full object-cover transform group-hover:rotate-6 group-hover:scale-110 transition-transform duration-700 ease-out" />
                       </div>
                       <div className="mt-1 sm:mt-0">
                         <span className="text-xl sm:text-2xl font-bold text-[#C03434] font-forma_djr_display block drop-shadow-sm">
@@ -629,7 +608,7 @@ export default function Menu() {
               {/* Product Image Full Bleed */}
               <div className="absolute inset-0 w-full h-full z-10 transition-transform duration-[1.5s] ease-out hover:scale-105 animate-image-reveal">
                 <img
-                  src={selectedProduct.image}
+                  src={selectedProduct.image || burgerImg}
                   alt={selectedProduct.name}
                   className="w-full h-full object-cover object-center"
                 />

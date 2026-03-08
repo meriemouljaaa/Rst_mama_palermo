@@ -115,6 +115,33 @@ export default function Menu() {
   const [activeTabMobile, setActiveTabMobile] = useState(menuCategories[0].id);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const addToCart = (product, qty) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + qty } : item);
+      }
+      return [...prev, { ...product, quantity: qty }];
+    });
+    setSelectedProduct(null);
+    setQuantity(1);
+    setIsCartOpen(true);
+  };
+
+  const updateCartQuantity = (productId, delta) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === productId) {
+        return { ...item, quantity: Math.max(0, item.quantity + delta) };
+      }
+      return item;
+    }).filter(item => item.quantity > 0));
+  };
+
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace(" DH", "")) * item.quantity), 0);
 
   const rightScrollRef = useRef(null);
 
@@ -527,10 +554,7 @@ export default function Menu() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    setSelectedProduct(null);
-                    setQuantity(1);
-                  }}
+                  onClick={() => addToCart(selectedProduct, quantity)}
                   className="flex-1 w-full bg-gradient-to-r from-[#C03434] to-[#a32222] text-white h-14 sm:h-16 rounded-[1.25rem] font-bold uppercase hover:from-[#a32222] hover:to-[#8a1919] transition-all duration-300 shadow-[0_10px_25px_-5px_rgba(192,52,52,0.4)] hover:shadow-[0_5px_15px_-5px_rgba(192,52,52,0.4)] hover:-translate-y-0.5 active:translate-y-px relative overflow-hidden group px-4 sm:px-6"
                 >
                   <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
@@ -567,6 +591,102 @@ export default function Menu() {
               animation: imageReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
             }
           `}} />
+        </div>
+      )}
+
+      {/* Floating Cart Button */}
+      {cartItemCount > 0 && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-gradient-to-r from-[#C03434] to-[#a32222] text-white p-4 rounded-full shadow-[0_10px_30px_-5px_rgba(192,52,52,0.5)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center group"
+        >
+          <div className="relative">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span className="absolute -top-2 -right-2 bg-white text-[#C03434] text-[11px] font-bold w-[22px] h-[22px] rounded-full flex items-center justify-center shadow-sm">
+              {cartItemCount}
+            </span>
+          </div>
+        </button>
+      )}
+
+      {/* Cart Drawer Slide-out */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[120] flex justify-end">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity animate-backdrop-entry"
+            onClick={() => setIsCartOpen(false)}
+          ></div>
+          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col transform transition-transform duration-300 animate-[slideInRight_0.4s_ease-out_forwards]">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-[#FDFCFB]">
+              <h2 className="text-2xl font-bold font-souvenir_std text-emerald-950 flex items-center gap-2">
+                <span>Panier</span>
+                <span className="bg-red-50 text-[#C03434] text-sm px-2.5 py-0.5 rounded-full font-sans tracking-widest">{cartItemCount}</span>
+              </h2>
+              <button onClick={() => setIsCartOpen(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            {/* Items */}
+            <div className="flex-1 overflow-y-auto p-5 no-scrollbar bg-gray-50/50">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                  <svg className="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                  <p className="text-lg font-medium text-gray-500">Votre panier est vide</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {cart.map(item => (
+                    <div key={item.id} className="flex gap-4 bg-white p-3 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100/60 transition-all hover:border-red-100">
+                      <div className="w-20 h-20 rounded-[14px] overflow-hidden bg-gray-50 shrink-0 border border-black/5">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-bold text-emerald-950 text-[15px] leading-[1.2]">{item.name}</h4>
+                          <button onClick={() => updateCartQuantity(item.id, -item.quantity)} className="text-gray-300 hover:text-[#C03434] transition-colors shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="font-bold text-[#C03434] text-[16px] font-forma_djr_display bg-red-50 px-2 py-0.5 rounded-lg">
+                            {(parseFloat(item.price.replace(" DH", "")) * item.quantity).toFixed(2).replace(/\.00$/, '')} DH
+                          </span>
+                          <div className="flex items-center gap-3 bg-[#fdfdfd] border border-gray-200 rounded-xl p-0.5 shadow-sm">
+                            <button onClick={() => updateCartQuantity(item.id, -1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-[9px] transition-all">-</button>
+                            <span className="font-bold text-sm text-emerald-950 min-w-[14px] text-center">{item.quantity}</span>
+                            <button onClick={() => updateCartQuantity(item.id, 1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-[9px] transition-all">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Checkout Area */}
+            {cart.length > 0 && (
+              <div className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.08)]">
+                <div className="flex justify-between items-center mb-5">
+                  <span className="text-emerald-950 font-medium text-[16px]">Total panier</span>
+                  <span className="text-3xl font-bold text-[#C03434] font-forma_djr_display bg-clip-text text-transparent bg-gradient-to-r from-[#C03434] to-[#a32222]">{cartTotal.toFixed(2)} DH</span>
+                </div>
+                <button className="w-full bg-emerald-950 text-white h-[60px] rounded-[1.25rem] font-bold tracking-[0.15em] uppercase text-[13px] hover:bg-emerald-900 transition-all shadow-lg shadow-emerald-950/20 hover:shadow-emerald-950/40 hover:-translate-y-0.5 active:translate-y-px">
+                  Valider la commande
+                </button>
+              </div>
+            )}
+          </div>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+             @keyframes slideInRight {
+               from { transform: translateX(100%); }
+               to { transform: translateX(0); }
+             }
+             `
+          }} />
         </div>
       )}
 

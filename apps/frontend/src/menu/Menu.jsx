@@ -121,11 +121,31 @@ export default function Menu() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [cartAnimations, setCartAnimations] = useState([]);
+  const [isCartBumping, setIsCartBumping] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('mamma_palermo_cart', JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = (product, qty) => {
+  const addToCart = (product, qty, e) => {
+    if (e) {
+      e.stopPropagation();
+      // Generate animation coordinate point
+      const rect = e.currentTarget.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+      const id = Date.now() + Math.random();
+
+      setCartAnimations(prev => [...prev, { id, x: startX, y: startY, image: product.image }]);
+
+      setTimeout(() => {
+        setCartAnimations(prev => prev.filter(a => a.id !== id));
+        setIsCartBumping(true);
+        setTimeout(() => setIsCartBumping(false), 300);
+      }, 700);
+    }
+
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -135,7 +155,7 @@ export default function Menu() {
     });
     setSelectedProduct(null);
     setQuantity(1);
-    setIsCartOpen(true);
+    // Removed setIsCartOpen(true) to allow user to keep shopping
   };
 
   const updateCartQuantity = (productId, delta) => {
@@ -304,10 +324,7 @@ export default function Menu() {
                               Détails
                             </button>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(item, 1);
-                              }}
+                              onClick={(e) => addToCart(item, 1, e)}
                               className="w-[32px] shrink-0 bg-[#C03434] text-white rounded-[8px] flex items-center justify-center hover:bg-[#a32222] active:scale-95 transition-all shadow-[0_2px_8px_rgba(192,52,52,0.3)]">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
                             </button>
@@ -452,10 +469,7 @@ export default function Menu() {
                         <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#C03434] group-hover:w-full transition-all duration-500"></span>
                       </span>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(item, 1);
-                        }}
+                        onClick={(e) => addToCart(item, 1, e)}
                         className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 flex items-center justify-center transform group-hover:bg-[#C03434] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_5px_12px_-3px_rgba(192,52,52,0.3)] transition-all duration-500"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
@@ -577,7 +591,7 @@ export default function Menu() {
                 </div>
 
                 <button
-                  onClick={() => addToCart(selectedProduct, quantity)}
+                  onClick={(e) => addToCart(selectedProduct, quantity, e)}
                   className="flex-1 w-full bg-gradient-to-r from-[#C03434] to-[#a32222] text-white h-14 sm:h-16 rounded-[1.25rem] font-bold uppercase hover:from-[#a32222] hover:to-[#8a1919] transition-all duration-300 shadow-[0_10px_25px_-5px_rgba(192,52,52,0.4)] hover:shadow-[0_5px_15px_-5px_rgba(192,52,52,0.4)] hover:-translate-y-0.5 active:translate-y-px relative overflow-hidden group px-4 sm:px-6"
                 >
                   <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
@@ -613,15 +627,30 @@ export default function Menu() {
               opacity: 0;
               animation: imageReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
             }
+            }
           `}} />
         </div>
       )}
+
+      {/* Flying Cart Animations */}
+      {cartAnimations.map(anim => (
+        <div
+          key={anim.id}
+          className="fixed z-[9999] w-16 h-16 rounded-full overflow-hidden shadow-2xl border-2 border-white pointer-events-none animate-fly-to-cart"
+          style={{
+            '--start-x': `${anim.x}px`,
+            '--start-y': `${anim.y}px`,
+          }}
+        >
+          <img src={anim.image} alt="Flying item" className="w-full h-full object-cover" />
+        </div>
+      ))}
 
       {/* Floating Cart Button */}
       {cartItemCount > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-gradient-to-r from-[#C03434] to-[#a32222] text-white p-4 rounded-full shadow-[0_10px_30px_-5px_rgba(192,52,52,0.5)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center group"
+          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-gradient-to-r from-[#C03434] to-[#a32222] text-white p-4 rounded-full shadow-[0_10px_30px_-5px_rgba(192,52,52,0.5)] transition-all duration-300 flex items-center justify-center group ${isCartBumping ? 'scale-125 hover:scale-125' : 'hover:-translate-y-1'}`}
         >
           <div className="relative">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -711,8 +740,22 @@ export default function Menu() {
              `
           }} />
         </div>
-      )}
+      )
+      }
 
-    </div>
+      {/* Global Menu Styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes flyToCart {
+          0% { top: var(--start-y); left: var(--start-x); transform: translate(-50%, -50%) scale(1); opacity: 1; }
+          20% { top: calc(var(--start-y) - 50px); transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+          100% { top: calc(100vh - 50px); left: calc(100vw - 50px); transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+        }
+        .animate-fly-to-cart {
+          animation: flyToCart 0.7s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+        }
+        `
+      }} />
+    </div >
   );
 }

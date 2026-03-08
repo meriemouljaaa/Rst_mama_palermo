@@ -115,8 +115,15 @@ export default function Menu() {
   const [activeTabMobile, setActiveTabMobile] = useState(menuCategories[0].id);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('mamma_palermo_cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('mamma_palermo_cart', JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (product, qty) => {
     setCart(prev => {

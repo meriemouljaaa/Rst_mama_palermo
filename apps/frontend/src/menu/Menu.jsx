@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // Image imports
@@ -113,8 +113,16 @@ const menuCategories = [
 export default function Menu() {
   const [activeTabDesktop, setActiveTabDesktop] = useState(menuCategories[0].id);
   const [activeTabMobile, setActiveTabMobile] = useState(menuCategories[0].id);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   const rightScrollRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setQuantity(1);
+    }
+  }, [selectedProduct]);
 
   // Scroll logic Desktop
   const scrollToSectionDesktop = (id) => {
@@ -233,7 +241,11 @@ export default function Menu() {
 
                   <div className="grid grid-cols-2 gap-2.5">
                     {cat.items.map((item) => (
-                      <div key={item.id} className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-2.5 flex flex-col relative overflow-hidden h-full">
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedProduct(item)}
+                        className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-2.5 flex flex-col relative overflow-hidden h-full cursor-pointer active:scale-95 transition-transform"
+                      >
 
                         {/* Share Icon */}
                         <button className="absolute top-2.5 right-2.5 w-7 h-7 bg-white/90 hover:bg-gray-100 backdrop-blur rounded-full flex items-center justify-center z-10 shadow-sm transition-colors border border-gray-100">
@@ -357,7 +369,8 @@ export default function Menu() {
                 {category.items.map((item) => (
                   <div
                     key={item.id}
-                    className="group relative bg-white border border-emerald-900/5 rounded-2xl p-5 hover:shadow-[0_15px_30px_-10px_rgba(2,44,34,0.1)] transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 overflow-hidden"
+                    onClick={() => setSelectedProduct(item)}
+                    className="group relative bg-white border border-emerald-900/5 rounded-2xl p-5 hover:shadow-[0_15px_30px_-10px_rgba(2,44,34,0.1)] transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 overflow-hidden cursor-pointer hover:border-[#C03434]/20"
                   >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-50/50 to-transparent rounded-bl-full -z-10 transition-transform duration-700 group-hover:scale-125"></div>
 
@@ -434,6 +447,128 @@ export default function Menu() {
           </div>
         </div>
       </div>
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm transition-all duration-300 animate-backdrop-entry"
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[850px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all duration-500 animate-modal-entry border border-white/20 flex flex-col md:flex-row relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button (Floating) */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/50 hover:bg-white text-emerald-950 rounded-full flex items-center justify-center backdrop-blur-lg shadow-lg transition-all duration-300 border border-white"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            {/* Left Side: Image */}
+            <div className="relative h-64 md:h-auto md:w-1/2 overflow-hidden bg-emerald-900/5 isolate border-r border-gray-100/50">
+              {/* Product Image Full Bleed */}
+              <div className="absolute inset-0 w-full h-full z-10 transition-transform duration-[1.5s] ease-out hover:scale-105 animate-image-reveal">
+                <img
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
+                  className="w-full h-full object-cover object-center"
+                />
+              </div>
+
+              {selectedProduct.isPopular && (
+                <div className="absolute top-5 left-5 z-30 bg-gradient-to-r from-[#C03434] to-[#e63946] text-white text-[11px] font-bold px-4 py-1.5 rounded-full shadow-[0_4px_12px_rgba(192,52,52,0.4)] tracking-[0.15em] uppercase border border-red-500/30">
+                  Le Favori
+                </div>
+              )}
+            </div>
+
+            {/* Right Side: Content */}
+            <div className="p-6 sm:p-8 md:p-10 flex flex-col md:w-1/2 relative bg-white">
+              {/* Title & Price */}
+              <div className="flex flex-col gap-2 mb-6 md:w-full">
+                <div className="inline-flex items-center gap-2 mb-1">
+                  <span className="h-[2px] w-6 bg-[#C03434]"></span>
+                  <span className="text-[#C03434] font-bold tracking-[0.2em] uppercase text-[10px]">Détails</span>
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold text-emerald-950 font-souvenir_std leading-[1.1] drop-shadow-sm">
+                  {selectedProduct.name}
+                </h3>
+                <span className="text-2xl font-bold text-[#C03434] font-forma_djr_display mt-2 bg-red-50/50 self-start px-3 py-1 rounded-xl">
+                  {selectedProduct.price}
+                </span>
+              </div>
+
+              {/* Description */}
+              <div className="h-px w-full bg-gray-100 my-2"></div>
+
+              <p className="text-emerald-900/60 text-[15.5px] leading-[1.7] my-6 font-light overflow-y-auto no-scrollbar flex-grow min-h-[80px]">
+                {selectedProduct.description}
+                {!selectedProduct.description?.includes('Préparé avec soin') && " Préparé avec passion et savoir-faire pour une expérience authentique aux saveurs éclatantes d'Italie."}
+              </p>
+
+              {/* Quantity & Action */}
+              <div className="mt-auto pt-4 flex flex-col sm:flex-row items-center gap-4 w-full">
+                <div className="flex items-center w-full sm:w-auto bg-gray-50/80 rounded-[1.25rem] border border-gray-100 p-1.5 shadow-inner h-14 sm:h-16 shrink-0">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-emerald-900/40 hover:text-emerald-950 hover:bg-white rounded-xl transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4"></path></svg>
+                  </button>
+                  <span className="w-10 sm:w-12 text-center font-bold text-[18px] text-emerald-950">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-emerald-900/40 hover:text-emerald-950 hover:bg-white rounded-xl transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedProduct(null);
+                    setQuantity(1);
+                  }}
+                  className="flex-1 w-full bg-gradient-to-r from-[#C03434] to-[#a32222] text-white h-14 sm:h-16 rounded-[1.25rem] font-bold uppercase hover:from-[#a32222] hover:to-[#8a1919] transition-all duration-300 shadow-[0_10px_25px_-5px_rgba(192,52,52,0.4)] hover:shadow-[0_5px_15px_-5px_rgba(192,52,52,0.4)] hover:-translate-y-0.5 active:translate-y-px relative overflow-hidden group px-4 sm:px-6"
+                >
+                  <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
+                  <span className="relative z-10 flex items-center justify-center gap-2 w-full">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span className="tracking-[0.1em] text-[13px] mt-px">Ajouter</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+            @keyframes modalScale {
+              0% { opacity: 0; transform: scale(0.95); }
+              100% { opacity: 1; transform: scale(1); }
+            }
+            @keyframes backdropFade {
+              0% { opacity: 0; }
+              100% { opacity: 1; }
+            }
+            @keyframes imageReveal {
+              0% { opacity: 0; transform: scale(0.8) translateY(15px); filter: blur(10px); }
+              100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+            }
+            .animate-modal-entry {
+              animation: modalScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            .animate-backdrop-entry {
+              animation: backdropFade 0.3s ease-out forwards;
+            }
+            .animate-image-reveal {
+              opacity: 0;
+              animation: imageReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+            }
+          `}} />
+        </div>
+      )}
 
     </div>
   );

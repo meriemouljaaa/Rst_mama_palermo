@@ -101,7 +101,16 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 // Products API
 app.get('/api/products', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM products ORDER BY id ASC');
+        const result = await pool.query(`
+            SELECT p.*, 
+                   COALESCE((
+                       SELECT json_agg(json_build_object('id', v.id, 'name', v.name, 'price', v.price)) 
+                       FROM product_variants v 
+                       WHERE v.product_id = p.id
+                   ), '[]') as variants
+            FROM products p 
+            ORDER BY p.id ASC
+        `);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -110,43 +119,80 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { name, description, price, category, image_url, is_available } = req.body;
+    const { name, description, price, category, image_url, is_available, variants } = req.body;
+    const client = await pool.connect();
     try {
-        const result = await pool.query(
+        await client.query('BEGIN');
+        const result = await client.query(
             'INSERT INTO products (name, description, price, category_id, image_url, is_available) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
             [name, description, price, category, image_url, is_available]
         );
-        res.status(201).json(result.rows[0]);
+        const productId = result.rows[0].id;
+
+        if (variants && Array.isArray(variants)) {
+            for (const variant of variants) {
+                await client.query(
+                    'INSERT INTO product_variants (product_id, name, price) VALUES ($1, $2, $3)',
+                    [productId, variant.name, variant.price]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.status(201).json({ ...result.rows[0], variants: variants || [] });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 
 app.put('/api/products/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description, price, category, image_url, is_available } = req.body;
+    const { name, description, price, category, image_url, is_available, variants } = req.body;
+    const client = await pool.connect();
     try {
+        await client.query('BEGIN');
         // Fetch current product to find the old image
-        const oldProductRes = await pool.query('SELECT image_url FROM products WHERE id = $1', [id]);
+        const oldProductRes = await client.query('SELECT image_url FROM products WHERE id = $1', [id]);
         const oldImageUrl = oldProductRes.rows[0]?.image_url;
 
-        const result = await pool.query(
+        const result = await client.query(
             'UPDATE products SET name = $1, description = $2, price = $3, category_id = $4, image_url = $5, is_available = $6 WHERE id = $7 RETURNING *',
             [name, description, price, category, image_url, is_available, id]
         );
 
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+        if (result.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        // Update variants: delete and recreate for simplicity (can be optimized)
+        await client.query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+        if (variants && Array.isArray(variants)) {
+            for (const variant of variants) {
+                await client.query(
+                    'INSERT INTO product_variants (product_id, name, price) VALUES ($1, $2, $3)',
+                    [id, variant.name, variant.price]
+                );
+            }
+        }
 
         // If image has changed and old one was local, delete it
         if (oldImageUrl && oldImageUrl !== image_url) {
             deleteLocalImage(oldImageUrl);
         }
 
-        res.json(result.rows[0]);
+        await client.query('COMMIT');
+        res.json({ ...result.rows[0], variants: variants || [] });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 
@@ -330,8 +376,8 @@ app.post('/api/orders', async (req, res) => {
         if (items && items.length > 0) {
             const itemQueries = items.map(item =>
                 client.query(
-                    'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price) VALUES ($1, $2, $3, $4, $5)',
-                    [orderId, item.product_id, item.product_name, item.quantity, item.unit_price]
+                    'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, variant_name) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [orderId, item.product_id, item.product_name, item.quantity, item.unit_price, item.variant_name || null]
                 )
             );
             await Promise.all(itemQueries);
@@ -347,7 +393,8 @@ app.post('/api/orders', async (req, res) => {
                         'id', oi.id,
                         'product_name', COALESCE(oi.product_name, p.name, 'Article Web'),
                         'quantity', oi.quantity,
-                        'unit_price', oi.unit_price
+                        'unit_price', oi.unit_price,
+                        'variant_name', oi.variant_name
                     ))
                     FROM order_items oi
                     LEFT JOIN products p ON oi.product_id = p.id

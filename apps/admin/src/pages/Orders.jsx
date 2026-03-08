@@ -238,7 +238,12 @@ export default function Orders() {
                                                                         <div key={idx} className="flex justify-between items-start text-[11px]">
                                                                             <div className="flex gap-2 font-bold text-gray-800">
                                                                                 <span className="text-red-600 bg-red-50/80 border border-red-100 px-1 py-0.5 rounded-md text-[9px] leading-none shrink-0 h-fit mt-0.5">{item.quantity}x</span>
-                                                                                <span className="leading-tight">{item.product_name}</span>
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="leading-tight">{item.product_name}</span>
+                                                                                    {item.variant_name && (
+                                                                                        <span className="text-[10px] text-red-500 font-black uppercase tracking-tighter">Option: {item.variant_name}</span>
+                                                                                    )}
+                                                                                </div>
                                                                             </div>
                                                                             <span className="text-[10px] text-gray-400 font-bold shrink-0 mt-0.5">{(item.unit_price * item.quantity).toFixed(2)}</span>
                                                                         </div>
@@ -373,7 +378,12 @@ export default function Orders() {
                                             <div key={idx} className="flex justify-between items-center p-3 hover:bg-red-50/30 transition-colors group">
                                                 <div className="flex items-center gap-2.5">
                                                     <span className="text-[11px] font-black text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md border border-red-100/50 min-w-[28px] text-center">{item.quantity}x</span>
-                                                    <span className="font-bold text-gray-800 text-[13px] group-hover:text-red-700 transition-colors truncate max-w-[200px]">{item.product_name}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-gray-800 text-[13px] group-hover:text-red-700 transition-colors truncate max-w-[200px]">{item.product_name}</span>
+                                                        {item.variant_name && (
+                                                            <span className="text-[10px] text-red-500 font-black uppercase tracking-tighter">Option: {item.variant_name}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <span className="font-black text-gray-900 text-[13px]">{(item.unit_price * item.quantity).toFixed(2)} <span className="text-[9px] text-gray-400 font-bold">DH</span></span>
                                             </div>

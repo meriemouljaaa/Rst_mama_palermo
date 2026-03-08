@@ -17,7 +17,8 @@ export default function Products() {
         price: '',
         category_id: '',
         image_url: '',
-        is_available: true
+        is_available: true,
+        variants: []
     });
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -48,14 +49,37 @@ export default function Products() {
                 price: product.price,
                 category_id: product.category_id || '',
                 image_url: product.image_url || '',
-                is_available: product.is_available
+                is_available: product.is_available,
+                variants: product.variants || []
             });
         } else {
             setEditingProduct(null);
-            setFormData({ name: '', description: '', price: '', category_id: categories.length > 0 ? categories[0].id : '', image_url: '', is_available: true });
+            setFormData({ name: '', description: '', price: '', category_id: categories.length > 0 ? categories[0].id : '', image_url: '', is_available: true, variants: [] });
         }
         setSelectedFile(null);
         setIsModalOpen(true);
+    };
+
+    const addVariant = () => {
+        setFormData(prev => ({
+            ...prev,
+            variants: [...prev.variants, { name: '', price: '' }]
+        }));
+    };
+
+    const removeVariant = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            variants: prev.variants.filter((_, i) => i !== index)
+        }));
+    };
+
+    const updateVariant = (index, field, value) => {
+        setFormData(prev => {
+            const newVariants = [...prev.variants];
+            newVariants[index] = { ...newVariants[index], [field]: value };
+            return { ...prev, variants: newVariants };
+        });
     };
 
     const handleCloseModal = () => setIsModalOpen(false);
@@ -99,7 +123,10 @@ export default function Products() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    ...payload,
+                    variants: formData.variants.map(v => ({ ...v, price: parseFloat(v.price) }))
+                })
             });
             fetchData();
             handleCloseModal();
@@ -383,6 +410,61 @@ export default function Products() {
                                             rows="3"
                                             placeholder="What are the ingredients or flavor profile?"
                                         ></textarea>
+                                    </div>
+
+                                    {/* Variants Section */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                <DollarSign size={12} className="text-red-500" /> Size / Format Options
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={addVariant}
+                                                className="text-[10px] font-bold text-red-600 hover:text-black flex items-center gap-1 uppercase tracking-widest"
+                                            >
+                                                <Plus size={12} /> Add Option
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {formData.variants.map((variant, idx) => (
+                                                <div key={idx} className="flex gap-3 animate-in slide-in-from-left-2 duration-300">
+                                                    <input
+                                                        required
+                                                        type="text"
+                                                        value={variant.name}
+                                                        onChange={e => updateVariant(idx, 'name', e.target.value)}
+                                                        placeholder="Option Name (e.g. Large)"
+                                                        className="flex-1 border border-gray-100 rounded-xl px-4 py-2 text-sm font-bold text-gray-900 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all"
+                                                    />
+                                                    <div className="w-32 relative">
+                                                        <input
+                                                            required
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={variant.price}
+                                                            onChange={e => updateVariant(idx, 'price', e.target.value)}
+                                                            placeholder="Price"
+                                                            className="w-full border border-gray-100 rounded-xl pl-4 pr-10 py-2 text-sm font-bold text-gray-900 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all"
+                                                        />
+                                                        <span className="absolute right-3 top-2 text-[10px] font-black text-gray-300 uppercase">DH</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeVariant(idx)}
+                                                        className="p-2 text-gray-300 hover:text-red-600 transition-colors"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {formData.variants.length === 0 && (
+                                                <div className="text-[10px] text-gray-400 font-bold italic py-2">
+                                                    No variants added. Base price will be used.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">

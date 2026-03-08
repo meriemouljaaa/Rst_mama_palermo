@@ -35,6 +35,7 @@ export default function Menu() {
   const [dbProducts, setDbProducts] = useState([]);
   const [dynamicMenu, setDynamicMenu] = useState([]);
   const [productMapping, setProductMapping] = useState({});
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   // Metadata mapping for aesthetic consistency
   const CATEGORY_STYLE_META = {
@@ -91,7 +92,8 @@ export default function Menu() {
               description: p.description,
               price: `${p.price} DH`,
               image: p.image_url || null, // Will fallback to default in render
-              isPopular: false // Could be based on ranking later
+              isPopular: false, // Could be based on ranking later
+              variants: p.variants || []
             }));
 
           // Only include categories that have items
@@ -156,7 +158,18 @@ export default function Menu() {
       }
     });
 
-    const productWithId = { ...product, dbId: matchedId };
+    const effectivePrice = selectedVariant ? `${selectedVariant.price} DH` : product.price;
+    const effectiveName = selectedVariant ? `${product.name} (${selectedVariant.name})` : product.name;
+    const effectiveId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id;
+
+    const productWithId = {
+      ...product,
+      id: effectiveId,
+      name: effectiveName,
+      price: effectivePrice,
+      dbId: matchedId,
+      variant_name: selectedVariant ? selectedVariant.name : null
+    };
 
     if (e) {
       e.stopPropagation();
@@ -212,7 +225,8 @@ export default function Menu() {
         product_id: item.dbId || null, // No more fallbacks, if it's null it's a web-only item
         product_name: item.name,
         quantity: item.quantity,
-        unit_price: parseFloat(item.price.replace(" DH", ""))
+        unit_price: parseFloat(item.price.replace(" DH", "")),
+        variant_name: item.variant_name || null
       }));
 
       const orderNotes = checkoutForm.notes.trim();
@@ -256,6 +270,11 @@ export default function Menu() {
   useEffect(() => {
     if (selectedProduct) {
       setQuantity(1);
+      if (selectedProduct.variants && selectedProduct.variants.length > 0) {
+        setSelectedVariant(selectedProduct.variants[0]);
+      } else {
+        setSelectedVariant(null);
+      }
     }
   }, [selectedProduct]);
 
@@ -633,17 +652,41 @@ export default function Menu() {
                   {selectedProduct.name}
                 </h3>
                 <span className="text-2xl font-bold text-[#C03434] font-forma_djr_display mt-2 bg-red-50/50 self-start px-3 py-1 rounded-xl">
-                  {selectedProduct.price}
+                  {selectedVariant ? `${selectedVariant.price} DH` : selectedProduct.price}
                 </span>
               </div>
 
               {/* Description */}
               <div className="h-px w-full bg-gray-100 my-2"></div>
 
-              <p className="text-emerald-900/60 text-[15.5px] leading-[1.7] my-6 font-light overflow-y-auto no-scrollbar flex-grow min-h-[80px]">
+              <p className="text-emerald-900/60 text-[15.5px] leading-[1.7] my-6 font-light overflow-y-auto no-scrollbar max-h-[120px]">
                 {selectedProduct.description}
                 {!selectedProduct.description?.includes('Préparé avec soin') && " Préparé avec passion et savoir-faire pour une expérience authentique aux saveurs éclatantes d'Italie."}
               </p>
+
+              {/* Variants Section */}
+              {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Choisir Taille</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedProduct.variants.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariant(v)}
+                        className={`px-4 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center ${selectedVariant?.id === v.id
+                            ? 'bg-red-50 border-[#C03434] text-[#C03434] shadow-sm'
+                            : 'bg-white border-gray-100 text-emerald-950 hover:border-gray-200'
+                          }`}
+                      >
+                        <span className="text-[13px]">{v.name}</span>
+                        <span className="text-[11px] opacity-60">{v.price} DH</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Quantity & Action */}
               <div className="mt-auto pt-4 flex flex-col sm:flex-row items-center gap-4 w-full">

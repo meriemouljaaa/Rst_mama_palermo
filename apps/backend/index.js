@@ -362,14 +362,14 @@ app.get('/api/orders', async (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
-    const { customer_id, total_amount, notes, items } = req.body;
+    const { customer_id, total_amount, notes, items, payment_method } = req.body;
     console.log("New Order Items:", JSON.stringify(items, null, 2));
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
         const orderResult = await client.query(
-            'INSERT INTO orders (customer_id, total_amount, notes) VALUES ($1, $2, $3) RETURNING *',
-            [customer_id, total_amount, notes]
+            'INSERT INTO orders (customer_id, total_amount, notes, payment_method) VALUES ($1, $2, $3, $4) RETURNING *',
+            [customer_id, total_amount, notes, payment_method || 'Cash on Delivery']
         );
         const orderId = orderResult.rows[0].id;
 

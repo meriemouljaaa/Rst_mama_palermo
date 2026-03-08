@@ -138,7 +138,8 @@ export default function Menu() {
     last_name: '',
     phone: '',
     address: '',
-    notes: ''
+    notes: '',
+    payment_method: 'Cash on Delivery'
   });
 
   useEffect(() => {
@@ -238,7 +239,8 @@ export default function Menu() {
           customer_id: customer.id,
           total_amount: cartTotal,
           notes: orderNotes,
-          items: orderItems
+          items: orderItems,
+          payment_method: checkoutForm.payment_method
         })
       });
 
@@ -676,8 +678,8 @@ export default function Menu() {
                         key={v.id}
                         onClick={() => setSelectedVariant(v)}
                         className={`px-4 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center ${selectedVariant?.id === v.id
-                            ? 'bg-red-50 border-[#C03434] text-[#C03434] shadow-sm'
-                            : 'bg-white border-gray-100 text-emerald-950 hover:border-gray-200'
+                          ? 'bg-red-50 border-[#C03434] text-[#C03434] shadow-sm'
+                          : 'bg-white border-gray-100 text-emerald-950 hover:border-gray-200'
                           }`}
                       >
                         <span className="text-[13px]">{v.name}</span>
@@ -822,6 +824,32 @@ export default function Menu() {
                   <input required type="tel" placeholder="Téléphone" value={checkoutForm.phone} onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans" />
                   <textarea required placeholder="Adresse de livraison" value={checkoutForm.address} onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} rows="2" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans resize-none"></textarea>
                   <textarea placeholder="Notes pour la commande (optionnel)" value={checkoutForm.notes} onChange={e => setCheckoutForm({ ...checkoutForm, notes: e.target.value })} rows="2" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans resize-none"></textarea>
+
+                  <div className="mt-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Mode de Paiement</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutForm({ ...checkoutForm, payment_method: 'Cash on Delivery' })}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all ${checkoutForm.payment_method === 'Cash on Delivery' ? 'border-[#C03434] bg-red-50/50 text-[#C03434]' : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${checkoutForm.payment_method === 'Cash on Delivery' ? 'bg-[#C03434] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <span className="text-[12px] font-bold">Espèces</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutForm({ ...checkoutForm, payment_method: 'Online' })}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all ${checkoutForm.payment_method === 'Online' ? 'border-[#C03434] bg-red-50/50 text-[#C03434]' : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${checkoutForm.payment_method === 'Online' ? 'bg-[#C03434] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        </div>
+                        <span className="text-[12px] font-bold">En ligne</span>
+                      </button>
+                    </div>
+                  </div>
                 </form>
               </div>
             ) : (

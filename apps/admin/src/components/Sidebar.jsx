@@ -7,8 +7,7 @@ import {
     Users,
     Pizza,
     ChevronLeft,
-    ChevronRight,
-    CircleDashed
+    ChevronRight
 } from 'lucide-react';
 
 export default function Sidebar({ isCollapsed, onToggle }) {
@@ -83,17 +82,6 @@ export default function Sidebar({ isCollapsed, onToggle }) {
                 })}
             </nav>
 
-            {/* Footer Section */}
-            <div className="p-4 border-t border-gray-100 flex items-center justify-center overflow-hidden">
-                {!isCollapsed ? (
-                    <div className="flex items-center gap-2 opacity-30">
-                        <CircleDashed size={12} className="animate-spin" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest">v1.2.4 Active</p>
-                    </div>
-                ) : (
-                    <span className="text-[10px] font-black text-gray-300">1.2</span>
-                )}
-            </div>
         </aside>
     );
 }

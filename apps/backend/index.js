@@ -257,16 +257,28 @@ app.get('/api/customers', async (req, res) => {
 });
 
 app.post('/api/customers', async (req, res) => {
-    const { first_name, last_name, email, phone, address } = req.body;
+    let { first_name, last_name, email, phone, address } = req.body;
     try {
+        if (!email || email.trim() === '') {
+            email = `guest_${Date.now()}_${Math.floor(Math.random() * 10000)}@guest.local`;
+        }
+
         const result = await pool.query(
-            'INSERT INTO customers (first_name, last_name, email, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            `INSERT INTO customers (first_name, last_name, email, phone, address) 
+             VALUES ($1, $2, $3, $4, $5) 
+             ON CONFLICT (email) 
+             DO UPDATE SET 
+               first_name = EXCLUDED.first_name, 
+               last_name = EXCLUDED.last_name, 
+               phone = EXCLUDED.phone, 
+               address = EXCLUDED.address
+             RETURNING *`,
             [first_name, last_name, email, phone, address]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error("Customer Creation Error:", err);
+        res.status(500).json({ error: 'Internal server error', details: err.message });
     }
 });
 
@@ -279,33 +291,37 @@ app.get('/api/orders', async (req, res) => {
                 c.first_name, 
                 c.last_name, 
                 c.email,
-                (
+                c.phone,
+                c.address,
+                COALESCE((
                     SELECT json_agg(json_build_object(
                         'id', oi.id,
-                        'product_name', p.name,
+                        'product_name', COALESCE(oi.product_name, p.name, 'Article Web'),
                         'quantity', oi.quantity,
                         'unit_price', oi.unit_price
                     ))
                     FROM order_items oi
-                    JOIN products p ON oi.product_id = p.id
+                    LEFT JOIN products p ON oi.product_id = p.id
                     WHERE oi.order_id = o.id
-                ) as items
+                ), '[]') as items
             FROM orders o
             JOIN customers c ON o.customer_id = c.id
             ORDER BY o.created_at DESC
         `);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error("Fetch Orders Error:", err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 app.post('/api/orders', async (req, res) => {
     const { customer_id, total_amount, notes, items } = req.body;
+    console.log("New Order Items:", JSON.stringify(items, null, 2));
+    const client = await pool.connect();
     try {
-        await pool.query('BEGIN');
-        const orderResult = await pool.query(
+        await client.query('BEGIN');
+        const orderResult = await client.query(
             'INSERT INTO orders (customer_id, total_amount, notes) VALUES ($1, $2, $3) RETURNING *',
             [customer_id, total_amount, notes]
         );
@@ -313,23 +329,47 @@ app.post('/api/orders', async (req, res) => {
 
         if (items && items.length > 0) {
             const itemQueries = items.map(item =>
-                pool.query(
-                    'INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES ($1, $2, $3, $4)',
-                    [orderId, item.product_id, item.quantity, item.unit_price]
+                client.query(
+                    'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price) VALUES ($1, $2, $3, $4, $5)',
+                    [orderId, item.product_id, item.product_name, item.quantity, item.unit_price]
                 )
             );
             await Promise.all(itemQueries);
         }
-        await pool.query('COMMIT');
+        await client.query('COMMIT');
 
-        // Notify via websocket
-        io.emit('newOrder', orderResult.rows[0]);
+        // Fetch full order data for the websocket broadcast
+        const fullOrderRes = await client.query(`
+            SELECT 
+                o.*, c.first_name, c.last_name, c.email, c.phone, c.address,
+                COALESCE((
+                    SELECT json_agg(json_build_object(
+                        'id', oi.id,
+                        'product_name', COALESCE(oi.product_name, p.name, 'Article Web'),
+                        'quantity', oi.quantity,
+                        'unit_price', oi.unit_price
+                    ))
+                    FROM order_items oi
+                    LEFT JOIN products p ON oi.product_id = p.id
+                    WHERE oi.order_id = o.id
+                ), '[]') as items
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.id
+            WHERE o.id = $1
+        `, [orderId]);
 
-        res.status(201).json(orderResult.rows[0]);
+        const fullOrder = fullOrderRes.rows[0];
+
+        // Notify via websocket with ALL details
+        io.emit('newOrder', fullOrder);
+
+        res.status(201).json(fullOrder);
     } catch (err) {
-        await pool.query('ROLLBACK');
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+        await client.query('ROLLBACK');
+        console.error("Order Creation Error:", err);
+        res.status(500).json({ error: 'Internal server error', details: err.message });
+    } finally {
+        client.release();
     }
 });
 

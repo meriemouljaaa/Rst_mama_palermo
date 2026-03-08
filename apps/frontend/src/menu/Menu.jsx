@@ -298,10 +298,20 @@ export default function Menu() {
                             {item.price.replace(" DH", "")}.00 DH
                           </span>
 
-                          {/* Main Action Button */}
-                          <button className="w-full py-1.5 border border-[#C03434] text-[#C03434] rounded-[8px] text-[13px] font-bold uppercase tracking-wider hover:bg-[#C03434]/5 active:bg-[#C03434] active:text-white transition-all">
-                            Détails
-                          </button>
+                          {/* Actions */}
+                          <div className="flex gap-1.5 w-full mt-2">
+                            <button className="flex-1 py-1.5 border border-[#C03434] text-[#C03434] rounded-[8px] text-[12px] font-bold uppercase tracking-wider hover:bg-[#C03434]/5 active:bg-[#C03434] active:text-white transition-all">
+                              Détails
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(item, 1);
+                              }}
+                              className="w-[32px] shrink-0 bg-[#C03434] text-white rounded-[8px] flex items-center justify-center hover:bg-[#a32222] active:scale-95 transition-all shadow-[0_2px_8px_rgba(192,52,52,0.3)]">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -441,7 +451,13 @@ export default function Menu() {
                         Voir détails
                         <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#C03434] group-hover:w-full transition-all duration-500"></span>
                       </span>
-                      <button className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 flex items-center justify-center transform group-hover:bg-[#C03434] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_5px_12px_-3px_rgba(192,52,52,0.3)] transition-all duration-500">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(item, 1);
+                        }}
+                        className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 flex items-center justify-center transform group-hover:bg-[#C03434] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_5px_12px_-3px_rgba(192,52,52,0.3)] transition-all duration-500"
+                      >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
                       </button>
                     </div>

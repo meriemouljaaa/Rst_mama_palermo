@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo, memo } from "react";
 import { Link } from "react-router-dom";
 
 // Image imports
@@ -16,7 +16,68 @@ import sodaImg from "../assets/products/soda.jpg";
 import jusImg from "../assets/products/jus.jpg";
 import cafeImg from "../assets/products/cafe.jpg";
 
+// --- Optimized Light Components ---
 
+const ProductCard = memo(({ item, onAddToCart, onSelect }) => (
+  <div
+    onClick={() => onSelect(item)}
+    className="group relative bg-white border border-emerald-900/5 rounded-2xl p-5 hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer"
+  >
+    <div className="flex flex-col sm:flex-row items-start lg:items-center gap-3 mb-4">
+      <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm shrink-0 border border-emerald-900/10 bg-emerald-50">
+        <img src={item.image || burgerImg} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
+      </div>
+      <div className="mt-1 sm:mt-0">
+        <span className="text-xl sm:text-2xl font-bold text-[#C03434] block">
+          {item.price}
+        </span>
+      </div>
+    </div>
+    <h3 className="text-xl font-bold text-emerald-950 font-souvenir_std mb-2 truncate group-hover:text-[#C03434] transition-colors">
+      {item.name}
+    </h3>
+    <div className="flex-grow">
+      <p className="text-emerald-900/60 leading-snug text-[13px] font-light line-clamp-2">
+        {item.description}
+      </p>
+    </div>
+    <div className="mt-5 pt-3 border-t border-emerald-900/10 flex items-center justify-between">
+      <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-widest">Détails</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onAddToCart(item, 1, e); }}
+        className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 flex items-center justify-center hover:bg-[#C03434] hover:text-white transition-all"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+    </div>
+  </div>
+));
+
+const MobileProductCard = memo(({ item, onAddToCart, onSelect }) => (
+  <div
+    onClick={() => onSelect(item)}
+    className="bg-white rounded-[16px] shadow-sm p-2.5 flex flex-col relative overflow-hidden h-full active:scale-95 transition-transform"
+  >
+    <div className="w-full aspect-square mb-2 relative overflow-hidden rounded-[8px] bg-gray-50 shrink-0">
+      <img src={item.image || burgerImg} alt={item.name} loading="lazy" className="w-full h-full object-contain p-1" />
+    </div>
+    <div className="flex flex-col flex-grow">
+      <h4 className="text-[13px] font-bold text-gray-800 leading-[1.2] mb-1.5 line-clamp-2">{item.name}</h4>
+      <span className="text-[#333] font-bold text-[14px] mt-auto">
+        {item.price.replace(" DH", "")}.00 DH
+      </span>
+      <div className="flex gap-1.5 w-full mt-2">
+        <button className="flex-1 py-1.5 border border-[#C03434] text-[#C03434] rounded-[8px] text-[12px] font-bold uppercase">Détails</button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddToCart(item, 1, e); }}
+          className="w-[32px] shrink-0 bg-[#C03434] text-white rounded-[8px] flex items-center justify-center"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+));
 
 export default function Menu() {
   const [activeTabDesktop, setActiveTabDesktop] = useState(null);
@@ -28,29 +89,29 @@ export default function Menu() {
     return savedCart ? JSON.parse(savedCart) : [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
-
   const [cartAnimations, setCartAnimations] = useState([]);
   const [isCartBumping, setIsCartBumping] = useState(false);
-  const [dbCategories, setDbCategories] = useState([]);
-  const [dbProducts, setDbProducts] = useState([]);
   const [dynamicMenu, setDynamicMenu] = useState([]);
   const [productMapping, setProductMapping] = useState({});
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [hydratedCategories, setHydratedCategories] = useState(new Set());
 
-  // Metadata mapping for aesthetic consistency
-  const CATEGORY_STYLE_META = {
-    "pizzas": { banner: pizzaImg, title: "Nos Pizzas", subtitle: "Artisanales & Cuites au feu de bois", icon: pizzaImg },
-    "pastas": { banner: pastaImg, title: "Pasta Fresca", subtitle: "Pâtes fraîches faites maison", icon: pastaImg },
-    "desserts": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté", icon: dolceImg },
-    "dolce": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté", icon: dolceImg },
-    "boissons": { banner: sodaImg, title: "Rafraîchissements", subtitle: "Boissons fraîches & jus naturels", icon: sodaImg },
-    "plats": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal", icon: platPouletImg },
-    "burgers & sandwiches": { banner: burgerImg, title: "Gourmet Burgers", subtitle: "Pain brioché & sandwichs italiens", icon: burgerImg },
-    "nos burgers": { banner: burgerImg, title: "Nos Burgers", subtitle: "Bœuf & Poulet", icon: burgerImg },
-    "panuozzo sandwiches": { banner: panuazzoImg, title: "Panuozzo", subtitle: "L'authentique sandwich napolitain", icon: panuazzoImg },
-    "antipasti & entrées": { banner: saladesImg, title: "Antipasti", subtitle: "Pour commencer en gourmandise", icon: saladesImg },
-    "salades": { banner: saladesImg, title: "Insalate", subtitle: "Fraîcheur & saveurs méditerranéennes", icon: saladesImg }
-  };
+  const CATEGORY_STYLE_META = useMemo(() => ({
+    "pizzas": { banner: pizzaImg, title: "Nos Pizzas", subtitle: "Artisanales & Cuites au feu de bois" },
+    "pastas": { banner: pastaImg, title: "Pasta Fresca", subtitle: "Pâtes fraîches faites maison" },
+    "desserts": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté" },
+    "boissons": { banner: sodaImg, title: "Rafraîchissements", subtitle: "Boissons fraîches & jus naturels" },
+    "plats": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal" },
+    "burgers & sandwiches": { banner: burgerImg, title: "Gourmet Burgers", subtitle: "Pain brioché & sandwichs italiens" },
+    "salades": { banner: saladesImg, title: "Insalate", subtitle: "Fraîcheur & saveurs méditerranéennes" }
+  }), []);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,126 +123,65 @@ export default function Menu() {
         const products = await prodRes.json();
         const categories = await catRes.json();
 
-        setDbProducts(products);
-        setDbCategories(categories);
-
-        // Build product mapping for checkout ID linking
         const mapping = {};
-        products.forEach(p => {
-          const cleanName = p.name.replace(/^\d+\.\s*/, '').toLowerCase().trim();
-          mapping[cleanName] = p.id;
-        });
+        products.forEach(p => mapping[p.name.replace(/^\d+\.\s*/, '').toLowerCase().trim()] = p.id);
         setProductMapping(mapping);
 
-        // Build dynamic menu structure
-        const availableProducts = products.filter(p => p.is_available);
-
-        // Group by main parent categories
         const rootCategories = categories.filter(c => !c.parent_id);
         const dynamicStructure = rootCategories.map(root => {
-          // Find all subcategories for this root
-          const subIds = categories
-            .filter(c => c.id === root.id || c.parent_id === root.id)
-            .map(c => c.id);
-
-          const items = availableProducts
-            .filter(p => subIds.includes(p.category_id))
-            .map(p => ({
-              id: p.id,
-              name: p.name,
-              description: p.description,
-              price: `${p.price} DH`,
-              image: p.image_url || null, // Will fallback to default in render
-              isPopular: false, // Could be based on ranking later
-              variants: p.variants || []
-            }));
-
-          // Only include categories that have items
+          const subIds = categories.filter(c => c.id === root.id || c.parent_id === root.id).map(c => c.id);
+          const items = products.filter(p => p.is_available && subIds.includes(p.category_id)).map(p => ({
+            id: p.id, name: p.name, description: p.description, price: `${p.price} DH`, image: p.image_url || null, variants: p.variants || []
+          }));
           if (items.length === 0) return null;
-
-          const metaKey = root.name.toLowerCase();
-          const style = CATEGORY_STYLE_META[metaKey] || {
-            banner: root.image_url || burgerImg,
-            title: root.name,
-            subtitle: root.description || "Découvrez notre sélection",
-            icon: root.image_url || burgerImg
-          };
-
-          return {
-            id: `cat-${root.id}`,
-            title: style.title,
-            subtitle: style.subtitle,
-            bannerImage: style.banner,
-            items: items
-          };
+          const style = CATEGORY_STYLE_META[root.name.toLowerCase()] || { banner: root.image_url || burgerImg, title: root.name, subtitle: root.description };
+          return { id: `cat-${root.id}`, title: style.title, subtitle: style.subtitle, bannerImage: style.banner, items };
         }).filter(Boolean);
 
         if (dynamicStructure.length > 0) {
           setDynamicMenu(dynamicStructure);
           setActiveTabDesktop(dynamicStructure[0].id);
           setActiveTabMobile(dynamicStructure[0].id);
+          setHydratedCategories(new Set([dynamicStructure[0].id]));
         }
-      } catch (err) {
-        console.error("Failed to fetch menu data", err);
-      }
+      } catch (err) { console.error(err); }
     };
-
     fetchData();
-  }, []);
+  }, [CATEGORY_STYLE_META]);
 
-  // Checkout states
+  // Progressive Hydration Logic
+  useEffect(() => {
+    if (dynamicMenu.length === 0) return;
+
+    // Smoothly hydrate other categories after the initial frame
+    const timer = setTimeout(() => {
+      setHydratedCategories(prev => {
+        const next = new Set(prev);
+        dynamicMenu.forEach(c => next.add(c.id));
+        return next;
+      });
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [dynamicMenu]);
+
+  // States & Cart logic unchanged
   const [isCheckoutMode, setIsCheckoutMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
-  const [checkoutForm, setCheckoutForm] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
-    address: '',
-    notes: '',
-    payment_method: 'Cash on Delivery'
-  });
+  const [checkoutForm, setCheckoutForm] = useState({ first_name: '', last_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' });
 
-  useEffect(() => {
-    localStorage.setItem('mamma_palermo_cart', JSON.stringify(cart));
-  }, [cart]);
+  useEffect(() => { localStorage.setItem('mamma_palermo_cart', JSON.stringify(cart)); }, [cart]);
 
   const addToCart = (product, qty, e) => {
-    // Try to find matching DB product ID
-    const cleanMenuName = product.name.replace(/^(La|Le|Nos|Notre|The|Il|Il)\s+/i, '').toLowerCase().trim();
-
-    // Fuzzy matching logic: either exact, or if the DB name is contained in the menu name or vice versa
-    let matchedId = null;
-    Object.entries(productMapping).forEach(([dbName, id]) => {
-      // Prioritize exact or start-of-string matches
-      if (cleanMenuName === dbName || cleanMenuName.startsWith(dbName) || dbName.startsWith(cleanMenuName)) {
-        matchedId = id;
-      }
-    });
-
     const effectivePrice = selectedVariant ? `${selectedVariant.price} DH` : product.price;
     const effectiveName = selectedVariant ? `${product.name} (${selectedVariant.name})` : product.name;
     const effectiveId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id;
 
-    const productWithId = {
-      ...product,
-      id: effectiveId,
-      name: effectiveName,
-      price: effectivePrice,
-      dbId: matchedId,
-      variant_name: selectedVariant ? selectedVariant.name : null
-    };
-
     if (e) {
-      e.stopPropagation();
-      // Generate animation coordinate point
       const rect = e.currentTarget.getBoundingClientRect();
-      const startX = rect.left + rect.width / 2;
-      const startY = rect.top + rect.height / 2;
       const id = Date.now() + Math.random();
-
-      setCartAnimations(prev => [...prev, { id, x: startX, y: startY, image: product.image }]);
-
+      setCartAnimations(prev => [...prev, { id, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, image: product.image || burgerImg }]);
       setTimeout(() => {
         setCartAnimations(prev => prev.filter(a => a.id !== id));
         setIsCartBumping(true);
@@ -190,244 +190,85 @@ export default function Menu() {
     }
 
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + qty } : item);
-      }
-      return [...prev, { ...productWithId, quantity: qty }];
+      const existing = prev.find(item => item.id === effectiveId);
+      if (existing) return prev.map(item => item.id === effectiveId ? { ...item, quantity: item.quantity + qty } : item);
+      return [...prev, { ...product, id: effectiveId, name: effectiveName, price: effectivePrice, dbId: productMapping[product.name.toLowerCase().trim()], variant_name: selectedVariant?.name || null, quantity: qty }];
     });
     setSelectedProduct(null);
-    setQuantity(1);
   };
 
-  const updateCartQuantity = (productId, delta) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === productId) {
-        return { ...item, quantity: Math.max(0, item.quantity + delta) };
-      }
-      return item;
-    }).filter(item => item.quantity > 0));
+  const updateCartQuantity = (id, delta) => setCart(prev => prev.map(item => item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item).filter(i => i.quantity > 0));
+  const cartTotal = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace(" DH", "")) * item.quantity), 0);
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const rightScrollRef = useRef(null);
+
+  const scrollToSectionDesktop = (id) => {
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.offsetTop - 120, behavior: 'smooth' });
+    setActiveTabDesktop(id);
+  };
+
+  const scrollToSectionMobile = (id) => {
+    const el = document.getElementById(`mobile-${id}`);
+    if (el && rightScrollRef.current) rightScrollRef.current.scrollTo({ top: el.offsetTop - rightScrollRef.current.offsetTop, behavior: 'smooth' });
+    setActiveTabMobile(id);
+  };
+
+  const handleMobileScroll = () => {
+    if (!rightScrollRef.current) return;
+    const divs = dynamicMenu.map(c => document.getElementById(`mobile-${c.id}`)).filter(Boolean);
+    let current = dynamicMenu[0]?.id;
+    for (const d of divs) {
+      if (d.offsetTop - rightScrollRef.current.offsetTop <= rightScrollRef.current.scrollTop + 50) current = d.id.replace('mobile-', '');
+    }
+    if (current !== activeTabMobile) setActiveTabMobile(current);
   };
 
   const handleCheckoutSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault(); setIsSubmitting(true);
     try {
-      const custRes = await fetch("http://localhost:3001/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(checkoutForm)
+      const cRes = await fetch("http://localhost:3001/api/customers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(checkoutForm) });
+      const customer = await cRes.json();
+      await fetch("http://localhost:3001/api/orders", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customer_id: customer.id, total_amount: cartTotal, notes: checkoutForm.notes, items: cart.map(i => ({ product_id: i.dbId || null, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(i.price.replace(" DH", "")), variant_name: i.variant_name })), payment_method: checkoutForm.payment_method })
       });
-
-      if (!custRes.ok) throw new Error("Failed to create customer");
-      const customer = await custRes.json();
-
-      const orderItems = cart.map(item => ({
-        product_id: item.dbId || null, // No more fallbacks, if it's null it's a web-only item
-        product_name: item.name,
-        quantity: item.quantity,
-        unit_price: parseFloat(item.price.replace(" DH", "")),
-        variant_name: item.variant_name || null
-      }));
-
-      const orderNotes = checkoutForm.notes.trim();
-
-      const orderRes = await fetch("http://localhost:3001/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: customer.id,
-          total_amount: cartTotal,
-          notes: orderNotes,
-          items: orderItems,
-          payment_method: checkoutForm.payment_method
-        })
-      });
-
-      if (!orderRes.ok) throw new Error("Failed to create order");
-
-      setCart([]);
-      setCheckoutSuccess(true);
-      setTimeout(() => {
-        setIsCartOpen(false);
-        setIsCheckoutMode(false);
-        setCheckoutSuccess(false);
-        setCheckoutForm({
-          first_name: '', last_name: '', phone: '', address: '', notes: ''
-        });
-      }, 3000);
-    } catch (err) {
-      console.error("Checkout Error:", err);
-      alert("Une erreur est survenue lors de la validation. Veuillez réessayer.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotal = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace(" DH", "")) * item.quantity), 0);
-
-  const rightScrollRef = useRef(null);
-
-  useEffect(() => {
-    if (selectedProduct) {
-      setQuantity(1);
-      if (selectedProduct.variants && selectedProduct.variants.length > 0) {
-        setSelectedVariant(selectedProduct.variants[0]);
-      } else {
-        setSelectedVariant(null);
-      }
-    }
-  }, [selectedProduct]);
-
-  // Scroll logic Desktop
-  const scrollToSectionDesktop = (id) => {
-    setActiveTabDesktop(id);
-    const element = document.getElementById(id);
-    if (element) {
-      const topOffset = element.getBoundingClientRect().top + window.scrollY - 120;
-      window.scrollTo({ top: topOffset, behavior: 'smooth' });
-    }
-  };
-
-  // Scroll logic Mobile
-  const scrollToSectionMobile = (id) => {
-    setActiveTabMobile(id);
-    const element = document.getElementById(`mobile-${id}`);
-    if (element && rightScrollRef.current) {
-      rightScrollRef.current.scrollTo({
-        top: element.offsetTop - rightScrollRef.current.offsetTop,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // Scroll Tracking on Mobile
-  const handleMobileScroll = () => {
-    if (!rightScrollRef.current) return;
-
-    const sections = dynamicMenu.map(c => document.getElementById(`mobile-${c.id}`));
-    let currentCat = dynamicMenu.length > 0 ? dynamicMenu[0].id : null;
-
-    for (const section of sections) {
-      if (!section) continue;
-      // When the top of the section comes close to the top of the container
-      if (section.offsetTop - rightScrollRef.current.offsetTop <= rightScrollRef.current.scrollTop + 30) {
-        currentCat = section.id.replace('mobile-', '');
-      }
-    }
-
-    if (currentCat && activeTabMobile !== currentCat) {
-      setActiveTabMobile(currentCat);
-    }
+      setCart([]); setCheckoutSuccess(true);
+      setTimeout(() => { setIsCartOpen(false); setIsCheckoutMode(false); setCheckoutSuccess(false); setCheckoutForm({ first_name: '', last_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' }); }, 3000);
+    } catch (err) { alert("Error"); } finally { setIsSubmitting(false); }
   };
 
   return (
-    <div className="bg-[#FDFCFB] text-emerald-950 font-forma_djr_display selection:bg-[#C03434] selection:text-white">
+    <div className="bg-[#FDFCFB] text-emerald-950 font-forma_djr_display min-h-screen">
 
-      {/* =========================================
-             1. MOBILE LAYOUT (App style - max-md)
-      ========================================= */}
-      <div className="md:hidden flex flex-col h-[100dvh] bg-gray-50 overflow-hidden fixed top-0 left-0 right-0 bottom-0 z-50">
-
-        {/* Top App Bar */}
-        <div className="flex items-center justify-between px-4 py-3.5 bg-gray-50 shrink-0 border-b border-gray-200">
-          <Link to="/" className="text-gray-900 p-1">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          </Link>
-          <span className="text-[19px] font-bold text-gray-900 tracking-tight">Nouveautés</span>
-          <button className="text-gray-500 p-1">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-          </button>
+      {/* MOBILE */}
+      <div className={`${isMobile ? 'flex' : 'hidden'} md:hidden flex-col h-[100dvh] bg-gray-50 overflow-hidden fixed inset-0 z-50`}>
+        <div className="flex items-center justify-between px-4 py-3.5 bg-gray-50 border-b shrink-0">
+          <Link to="/"><svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
+          <span className="text-[19px] font-bold">Le Menu</span>
+          <div className="w-5" />
         </div>
-
-        {/* Mobile Body Content */}
         <div className="flex flex-1 overflow-hidden">
-
-          {/* Left Sidebar (Categories) */}
-          <div className="w-[85px] bg-white border-r border-gray-100 overflow-y-auto no-scrollbar pb-24 shrink-0 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-            <div className="flex flex-col">
-              {dynamicMenu.map((cat) => {
-                const isActive = activeTabMobile === cat.id;
-                // Simpler shorter names for tight vertical sidebar
-                const nameParts = cat.title.split(' ');
-                const shortName = nameParts[nameParts.length - 1];
-
-                return (
-                  <button
-                    key={`side-${cat.id}`}
-                    onClick={() => scrollToSectionMobile(cat.id)}
-                    className={`relative w-full flex flex-col items-center py-5 px-1 gap-2 transition-all duration-300 ${isActive
-                      ? 'opacity-100 bg-gray-50'
-                      : 'opacity-60 hover:opacity-100 bg-white'
-                      }`}
-                  >
-                    {isActive && <div className="absolute left-0 top-[20%] bottom-[20%] w-1 bg-[#C03434] rounded-r-md"></div>}
-                    <div className={`w-12 h-12 relative rounded-full overflow-hidden shrink-0 transition-all duration-500 ${isActive ? 'scale-110 shadow-[0_5px_15px_-3px_rgba(192,52,52,0.3)] ring-2 ring-[#C03434] ring-offset-2 ring-offset-gray-50' : 'shadow-sm grayscale-[30%]'}`}>
-                      <img src={cat.bannerImage} alt={shortName} className="w-full h-full object-cover" />
-                    </div>
-                    <span className={`text-[10px] uppercase tracking-wider leading-tight text-center ${isActive ? 'font-bold text-[#C03434]' : 'font-semibold text-gray-500'}`}>
-                      {shortName}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+          <div className="w-[85px] bg-white border-r overflow-y-auto no-scrollbar pb-24 shrink-0 shadow-sm">
+            {dynamicMenu.map(cat => (
+              <button key={cat.id} onClick={() => scrollToSectionMobile(cat.id)} className={`w-full flex flex-col items-center py-5 px-1 gap-2 ${activeTabMobile === cat.id ? 'bg-gray-50' : 'opacity-60'}`}>
+                <div className={`w-12 h-12 rounded-full overflow-hidden transition-transform ${activeTabMobile === cat.id ? 'scale-110 shadow-lg ring-2 ring-[#C03434]' : 'grayscale-[30%]'}`}>
+                  <img src={cat.bannerImage} alt="" className="w-full h-full object-cover" />
+                </div>
+                <span className={`text-[10px] uppercase tracking-wider text-center ${activeTabMobile === cat.id ? 'font-bold text-[#C03434]' : 'font-semibold text-gray-400'}`}>{cat.title.split(' ').pop()}</span>
+              </button>
+            ))}
           </div>
-
-          {/* Right Content (Products Grid) */}
-          <div
-            className="flex-1 overflow-y-auto bg-gray-50 p-3 pb-32 no-scrollbar scroll-smooth"
-            ref={rightScrollRef}
-            onScroll={handleMobileScroll}
-          >
+          <div className="flex-1 overflow-y-auto bg-gray-50 p-3 pb-32 no-scrollbar scroll-smooth" ref={rightScrollRef} onScroll={handleMobileScroll}>
             <div className="space-y-6">
-              {dynamicMenu.map((cat) => (
-                <div key={`mobile-${cat.id}`} id={`mobile-${cat.id}`} className="scroll-mt-4">
-
-                  {/* Category Title Subtle Divider */}
+              {dynamicMenu.map(cat => (
+                <div key={`mobile-${cat.id}`} id={`mobile-${cat.id}`} className="scroll-mt-4 min-h-[100px]">
                   <h3 className="font-bold text-[17px] mb-3 text-gray-800 ml-1">{cat.title}</h3>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {cat.items.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => setSelectedProduct(item)}
-                        className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-2.5 flex flex-col relative overflow-hidden h-full cursor-pointer active:scale-95 transition-transform"
-                      >
-
-                        {/* Share Icon */}
-                        <button className="absolute top-2.5 right-2.5 w-7 h-7 bg-white/90 hover:bg-gray-100 backdrop-blur rounded-full flex items-center justify-center z-10 shadow-sm transition-colors border border-gray-100">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        </button>
-
-                        {/* Image cropped realistically */}
-                        <div className="w-full aspect-square mb-2 relative overflow-hidden rounded-[8px] bg-gray-50 shrink-0">
-                          <img src={item.image || burgerImg} alt={item.name} className="w-full h-full object-contain p-1" />
-                        </div>
-
-                        {/* Text Content */}
-                        <div className="flex flex-col flex-grow">
-                          <h4 className="text-[13px] font-bold text-gray-800 leading-[1.2] mb-1.5">{item.name}</h4>
-                          <span className="text-[#333] font-bold text-[14px] mb-3 mt-auto tracking-tight">
-                            {item.price.replace(" DH", "")}.00 DH
-                          </span>
-
-                          {/* Actions */}
-                          <div className="flex gap-1.5 w-full mt-2">
-                            <button className="flex-1 py-1.5 border border-[#C03434] text-[#C03434] rounded-[8px] text-[12px] font-bold uppercase tracking-wider hover:bg-[#C03434]/5 active:bg-[#C03434] active:text-white transition-all">
-                              Détails
-                            </button>
-                            <button
-                              onClick={(e) => addToCart(item, 1, e)}
-                              className="w-[32px] shrink-0 bg-[#C03434] text-white rounded-[8px] flex items-center justify-center hover:bg-[#a32222] active:scale-95 transition-all shadow-[0_2px_8px_rgba(192,52,52,0.3)]">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {hydratedCategories.has(cat.id) ? (
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {cat.items.map(item => <MobileProductCard key={item.id} item={item} onAddToCart={addToCart} onSelect={setSelectedProduct} />)}
+                    </div>
+                  ) : <div className="h-40 bg-white/50 rounded-2xl animate-pulse" />}
                 </div>
               ))}
             </div>
@@ -435,508 +276,123 @@ export default function Menu() {
         </div>
       </div>
 
-      {/* =========================================
-             2. DESKTOP LAYOUT (Classic web - md:block)
-      ========================================= */}
-      <div className="hidden md:block min-h-screen pb-20">
-
-        {/* Hero / Header Section (Immersive) */}
-        <div className="relative h-[45vh] min-h-[350px] w-full flex flex-col justify-center items-center overflow-hidden">
-          <div className="absolute inset-0 bg-emerald-950">
-            <img src={pizzaImg} alt="Menu Mamma Palermo" className="w-full h-full object-cover opacity-30 mix-blend-overlay hover:scale-110 transition-transform duration-[20s] ease-linear" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-emerald-950/80 to-transparent" />
-          </div>
-
-          <Link
-            to="/"
-            className="absolute z-30 top-10 left-10 text-white/90 text-sm font-medium flex items-center gap-2 bg-emerald-900/30 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 hover:bg-white hover:text-emerald-900 transition-all duration-300 shadow-xl group"
-          >
-            <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Retour à l'accueil
+      {/* DESKTOP */}
+      <div className={`${isMobile ? 'hidden' : 'block'} hidden md:block pb-20`}>
+        <div className="relative h-[45vh] w-full flex flex-col justify-center items-center overflow-hidden bg-emerald-950">
+          <img src={pizzaImg} className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-emerald-950/80 to-transparent" />
+          <Link to="/" className="absolute top-10 left-10 text-white text-sm font-medium flex items-center gap-2 bg-black/20 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 hover:bg-white hover:text-emerald-900 transition-all">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>Retour
           </Link>
-
-          <div className="relative z-10 text-center px-5 flex flex-col items-center mt-6">
-            <span className="text-emerald-300 font-bold tracking-[0.2em] uppercase text-xs sm:text-xs mb-4 border border-emerald-300/30 px-4 py-1.5 rounded-full backdrop-blur-md shadow-lg">Découvrez L'Authenticité</span>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 font-souvenir_std tracking-[-2px] text-white drop-shadow-[0_10px_35px_rgba(0,0,0,0.5)] leading-none">
-              La <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffe4b5] via-[#fff8dc] to-white drop-shadow-sm">Carte</span>
-            </h1>
-            <p className="text-lg md:text-xl text-emerald-50/90 max-w-2xl leading-relaxed font-light drop-shadow-lg mt-2">
-              Un voyage culinaire majestueux au cœur de l'Italie.
-              Des produits nobles, une passion ardente.
-            </p>
+          <div className="relative z-10 text-center flex flex-col items-center">
+            <span className="text-emerald-300 font-bold tracking-[0.2em] uppercase text-xs mb-4 border border-emerald-300/30 px-4 py-1.5 rounded-full backdrop-blur-md">Artisanal & Traditionnel</span>
+            <h1 className="text-8xl font-bold font-souvenir_std tracking-tight text-white leading-none">La <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffe4b5] to-white">Carte</span></h1>
           </div>
         </div>
-
-        {/* Sticky Tab Navigation */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl border-b border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-start lg:justify-center space-x-6 sm:space-x-10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
-              {dynamicMenu.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => scrollToSectionDesktop(cat.id)}
-                  className={`relative flex-none snap-start whitespace-nowrap py-5 text-[12px] sm:text-[13px] uppercase tracking-[0.12em] font-bold transition-colors duration-300 ${activeTabDesktop === cat.id
-                    ? "text-[#C03434]"
-                    : "text-emerald-950/40 hover:text-emerald-950"
-                    }`}
-                >
-                  {cat.title}
-                  {activeTabDesktop === cat.id && (
-                    <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[#C03434] rounded-t-lg shadow-[0_-2px_6px_rgba(192,52,52,0.4)]"></span>
-                  )}
-                </button>
-              ))}
-            </div>
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl border-b shadow-sm">
+          <div className="max-w-7xl mx-auto flex justify-center space-x-10">
+            {dynamicMenu.map(cat => (
+              <button key={cat.id} onClick={() => scrollToSectionDesktop(cat.id)} className={`relative py-5 text-[13px] uppercase tracking-widest font-bold transition-colors ${activeTabDesktop === cat.id ? "text-[#C03434]" : "text-emerald-950/40 hover:text-emerald-950"}`}>
+                {cat.title}
+                {activeTabDesktop === cat.id && <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[#C03434] rounded-t-lg" />}
+              </button>
+            ))}
           </div>
         </div>
-
-        {/* Menu Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
-          {dynamicMenu.map((category, index) => (
-            <section id={category.id} key={category.id} className="scroll-mt-32">
-
-              {/* Category Header Layout */}
-              <div className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-6 lg:gap-8 mb-10`}>
-                <div className="flex-1 space-y-3 w-full">
-                  <div className="inline-flex items-center gap-3">
-                    <span className="h-[2px] w-8 bg-[#C03434]"></span>
-                    <span className="text-[#C03434] font-bold tracking-[0.2em] uppercase text-[10px]">Sélection</span>
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-bold font-souvenir_std text-emerald-950 tracking-[-1px] leading-tight drop-shadow-sm">
-                    {category.title}
-                  </h2>
-                  <p className="text-base md:text-lg text-emerald-900/60 font-light max-w-lg leading-relaxed">
-                    {category.subtitle}
-                  </p>
-                </div>
-                <div className="flex-1 w-full h-[160px] md:h-[220px] relative rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] group isolate bg-emerald-50">
-                  <div className="absolute inset-0 bg-emerald-950/20 group-hover:bg-transparent transition-colors duration-700 z-10 pointer-events-none"></div>
-                  <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 rounded-[2.5rem]"></div>
-                  <img
-                    src={category.bannerImage}
-                    alt={category.title}
-                    className="w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[1.5s] ease-out"
-                  />
-                </div>
+        <div className="max-w-7xl mx-auto px-4 py-12 space-y-20">
+          {dynamicMenu.map((cat, idx) => (
+            <section id={cat.id} key={cat.id} className="scroll-mt-32 min-h-[200px]">
+              <div className={`flex flex-col ${idx % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-10 mb-12`}>
+                <div className="flex-1"><h2 className="text-5xl font-bold font-souvenir_std text-emerald-950 mb-4">{cat.title}</h2><p className="text-xl text-emerald-900/60 font-light">{cat.subtitle}</p></div>
+                <div className="flex-1 h-[220px] rounded-[2rem] overflow-hidden shadow-2xl bg-emerald-100"><img src={cat.bannerImage} className="w-full h-full object-cover" /></div>
               </div>
-
-              {/* Menu Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-                {category.items.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedProduct(item)}
-                    className="group relative bg-white border border-emerald-900/5 rounded-2xl p-5 hover:shadow-[0_15px_30px_-10px_rgba(2,44,34,0.1)] transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 overflow-hidden cursor-pointer hover:border-[#C03434]/20"
-                  >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-50/50 to-transparent rounded-bl-full -z-10 transition-transform duration-700 group-hover:scale-125"></div>
-
-                    {item.isPopular && (
-                      <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#C03434] to-[#e63946] text-white text-[9px] font-bold px-2.5 py-1 rounded-full shadow-[0_2px_8px_rgba(192,52,52,0.3)] tracking-[0.1em] uppercase">
-                        Le Favori
-                      </div>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row items-start lg:items-center gap-3 mb-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_5px_10px_-2px_rgba(0,0,0,0.1)] shrink-0 border-2 border-white ring-1 ring-emerald-900/10 group-hover:ring-emerald-400 group-hover:border-emerald-50 transition-all duration-500 relative bg-emerald-50">
-                        <img src={item.image || burgerImg} alt={item.name} className="w-full h-full object-cover transform group-hover:rotate-6 group-hover:scale-110 transition-transform duration-700 ease-out" />
-                      </div>
-                      <div className="mt-1 sm:mt-0">
-                        <span className="text-xl sm:text-2xl font-bold text-[#C03434] font-forma_djr_display block drop-shadow-sm">
-                          {item.price}
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-bold text-emerald-950 font-souvenir_std mb-2 group-hover:text-[#C03434] transition-colors duration-500 leading-tight">
-                      {item.name}
-                    </h3>
-
-                    <div className="flex-grow">
-                      <p className="text-emerald-900/60 leading-snug text-[13px] font-light md:max-w-xs">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-5 pt-3 border-t border-emerald-900/10 flex items-center justify-between group-hover:border-emerald-900/30 transition-colors duration-500">
-                      <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-widest relative">
-                        Voir détails
-                        <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#C03434] group-hover:w-full transition-all duration-500"></span>
-                      </span>
-                      <button
-                        onClick={(e) => addToCart(item, 1, e)}
-                        className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 flex items-center justify-center transform group-hover:bg-[#C03434] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_5px_12px_-3px_rgba(192,52,52,0.3)] transition-all duration-500"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
+              {hydratedCategories.has(cat.id) ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {cat.items.map(item => <ProductCard key={item.id} item={item} onAddToCart={addToCart} onSelect={setSelectedProduct} />)}
+                </div>
+              ) : <div className="h-60 bg-emerald-50 rounded-[2rem] animate-pulse" />}
             </section>
           ))}
         </div>
-
-        {/* Large Immersive Footer CTA */}
-        <div className="relative overflow-hidden bg-emerald-950 text-white min-h-[40vh] flex items-center justify-center rounded-t-[3rem] mx-4 sm:mx-8 shadow-2xl mt-8">
-          <div className="absolute inset-0 z-0">
-            <img src={dolceImg} className="w-full h-full object-cover opacity-20 transform hover:scale-105 transition-transform duration-[20s] ease-linear" alt="Mamma Palermo Ambiance" />
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/90 to-emerald-950/60"></div>
-          </div>
-
-          <div className="relative z-10 max-w-4xl mx-auto px-5 text-center flex flex-col items-center py-16 object-contain">
-            <div className="w-16 h-16 bg-gradient-to-tr from-[#C03434] to-[#f05c5c] rounded-full flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(192,52,52,0.5)]">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            </div>
-            <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 font-souvenir_std leading-tight drop-shadow-xl text-transparent bg-clip-text bg-gradient-to-r from-white to-emerald-200">
-              L'Appétit Vient<br />En Commandant.
-            </h3>
-            <p className="text-lg sm:text-2xl text-emerald-100/80 max-w-2xl font-light mb-10 leading-relaxed">
-              Profitez de l'excellence de <span className="text-white font-medium">Mamma Palermo</span> depuis le confort de votre maison.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-5 w-full justify-center">
-              <button className="bg-gradient-to-r from-[#C03434] to-[#a32222] text-white px-8 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-bold hover:from-[#a32222] hover:to-[#8a1919] transition-all duration-300 shadow-[0_15px_30px_-5px_rgba(192,52,52,0.4)] hover:shadow-none hover:-translate-y-1 ring-4 ring-transparent hover:ring-[#C03434]/30">
-                Commander en Livraison
-              </button>
-              <button className="bg-transparent border-2 border-emerald-100/30 backdrop-blur-md text-emerald-50 px-8 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-bold hover:bg-emerald-50 hover:text-emerald-950 transition-all duration-500 hover:-translate-y-1">
-                Click & Collect
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Product Detail Modal */}
+      {/* Persistent Components */}
       {selectedProduct && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm transition-all duration-300 animate-backdrop-entry"
-          onClick={() => setSelectedProduct(null)}
-        >
-          <div
-            className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[850px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all duration-500 animate-modal-entry border border-white/20 flex flex-col md:flex-row relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button (Floating) */}
-            <button
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/50 hover:bg-white text-emerald-950 rounded-full flex items-center justify-center backdrop-blur-lg shadow-lg transition-all duration-300 border border-white"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-
-            {/* Left Side: Image */}
-            <div className="relative h-64 md:h-auto md:w-1/2 overflow-hidden bg-emerald-900/5 isolate border-r border-gray-100/50">
-              {/* Product Image Full Bleed */}
-              <div className="absolute inset-0 w-full h-full z-10 transition-transform duration-[1.5s] ease-out hover:scale-105 animate-image-reveal">
-                <img
-                  src={selectedProduct.image || burgerImg}
-                  alt={selectedProduct.name}
-                  className="w-full h-full object-cover object-center"
-                />
-              </div>
-
-              {selectedProduct.isPopular && (
-                <div className="absolute top-5 left-5 z-30 bg-gradient-to-r from-[#C03434] to-[#e63946] text-white text-[11px] font-bold px-4 py-1.5 rounded-full shadow-[0_4px_12px_rgba(192,52,52,0.4)] tracking-[0.15em] uppercase border border-red-500/30">
-                  Le Favori
-                </div>
-              )}
-            </div>
-
-            {/* Right Side: Content */}
-            <div className="p-6 sm:p-8 md:p-10 flex flex-col md:w-1/2 relative bg-white">
-              {/* Title & Price */}
-              <div className="flex flex-col gap-2 mb-6 md:w-full">
-                <div className="inline-flex items-center gap-2 mb-1">
-                  <span className="h-[2px] w-6 bg-[#C03434]"></span>
-                  <span className="text-[#C03434] font-bold tracking-[0.2em] uppercase text-[10px]">Détails</span>
-                </div>
-                <h3 className="text-3xl md:text-4xl font-bold text-emerald-950 font-souvenir_std leading-[1.1] drop-shadow-sm">
-                  {selectedProduct.name}
-                </h3>
-                <span className="text-2xl font-bold text-[#C03434] font-forma_djr_display mt-2 bg-red-50/50 self-start px-3 py-1 rounded-xl">
-                  {selectedVariant ? `${selectedVariant.price} DH` : selectedProduct.price}
-                </span>
-              </div>
-
-              {/* Description */}
-              <div className="h-px w-full bg-gray-100 my-2"></div>
-
-              <p className="text-emerald-900/60 text-[15.5px] leading-[1.7] my-6 font-light overflow-y-auto no-scrollbar max-h-[120px]">
-                {selectedProduct.description}
-                {!selectedProduct.description?.includes('Préparé avec soin') && " Préparé avec passion et savoir-faire pour une expérience authentique aux saveurs éclatantes d'Italie."}
-              </p>
-
-              {/* Variants Section */}
-              {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}>
+          <div className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[850px] shadow-2xl flex flex-col md:flex-row relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/50 text-emerald-950 rounded-full flex items-center justify-center backdrop-blur-lg">✕</button>
+            <div className="h-64 md:h-auto md:w-1/2 overflow-hidden"><img src={selectedProduct.image || burgerImg} className="w-full h-full object-cover" /></div>
+            <div className="p-8 flex flex-col md:w-1/2">
+              <h3 className="text-3xl font-bold font-souvenir_std mb-2">{selectedProduct.name}</h3>
+              <span className="text-2xl font-bold text-[#C03434] mb-4 block">{selectedVariant ? `${selectedVariant.price} DH` : selectedProduct.price}</span>
+              <p className="text-emerald-900/60 font-light mb-8">{selectedProduct.description || "Une expérience authentique italienne."}</p>
+              {selectedProduct.variants?.length > 0 && (
                 <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Choisir Taille</span>
-                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    {selectedProduct.variants.map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => setSelectedVariant(v)}
-                        className={`px-4 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center ${selectedVariant?.id === v.id
-                          ? 'bg-red-50 border-[#C03434] text-[#C03434] shadow-sm'
-                          : 'bg-white border-gray-100 text-emerald-950 hover:border-gray-200'
-                          }`}
-                      >
-                        <span className="text-[13px]">{v.name}</span>
-                        <span className="text-[11px] opacity-60">{v.price} DH</span>
-                      </button>
+                    {selectedProduct.variants.map(v => (
+                      <button key={v.id} onClick={() => setSelectedVariant(v)} className={`p-3 rounded-xl font-bold border-2 transition-all ${selectedVariant?.id === v.id ? 'border-[#C03434] bg-red-50 text-[#C03434]' : 'border-gray-100'}`}>{v.name}</button>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Quantity & Action */}
-              <div className="mt-auto pt-4 flex flex-col sm:flex-row items-center gap-4 w-full">
-                <div className="flex items-center w-full sm:w-auto bg-gray-50/80 rounded-[1.25rem] border border-gray-100 p-1.5 shadow-inner h-14 sm:h-16 shrink-0">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-emerald-900/40 hover:text-emerald-950 hover:bg-white rounded-xl transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4"></path></svg>
-                  </button>
-                  <span className="w-10 sm:w-12 text-center font-bold text-[18px] text-emerald-950">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-emerald-900/40 hover:text-emerald-950 hover:bg-white rounded-xl transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-                  </button>
-                </div>
-
-                <button
-                  onClick={(e) => addToCart(selectedProduct, quantity, e)}
-                  className="flex-1 w-full bg-gradient-to-r from-[#C03434] to-[#a32222] text-white h-14 sm:h-16 rounded-[1.25rem] font-bold uppercase hover:from-[#a32222] hover:to-[#8a1919] transition-all duration-300 shadow-[0_10px_25px_-5px_rgba(192,52,52,0.4)] hover:shadow-[0_5px_15px_-5px_rgba(192,52,52,0.4)] hover:-translate-y-0.5 active:translate-y-px relative overflow-hidden group px-4 sm:px-6"
-                >
-                  <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
-                  <span className="relative z-10 flex items-center justify-center gap-2 w-full">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <span className="tracking-[0.1em] text-[13px] mt-px">Ajouter</span>
-                  </span>
-                </button>
+              <div className="mt-auto flex items-center gap-4">
+                <button onClick={(e) => addToCart(selectedProduct, quantity, e)} className="flex-1 bg-[#C03434] text-white h-16 rounded-xl font-bold uppercase shadow-lg">Ajouter au panier</button>
               </div>
             </div>
           </div>
-          <style dangerouslySetInnerHTML={{
-            __html: `
-            @keyframes modalScale {
-              0% { opacity: 0; transform: scale(0.95); }
-              100% { opacity: 1; transform: scale(1); }
-            }
-            @keyframes backdropFade {
-              0% { opacity: 0; }
-              100% { opacity: 1; }
-            }
-            @keyframes imageReveal {
-              0% { opacity: 0; transform: scale(0.8) translateY(15px); filter: blur(10px); }
-              100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-            }
-            .animate-modal-entry {
-              animation: modalScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            .animate-backdrop-entry {
-              animation: backdropFade 0.3s ease-out forwards;
-            }
-            .animate-image-reveal {
-              opacity: 0;
-              animation: imageReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
-            }
-            }
-          `}} />
         </div>
       )}
 
-      {/* Flying Cart Animations */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[120] flex justify-end">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setIsCartOpen(false)} />
+          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b"><h2 className="text-2xl font-bold font-souvenir_std">Panier</h2><button onClick={() => setIsCartOpen(false)}>✕</button></div>
+            <div className="flex-1 overflow-y-auto p-5 no-scrollbar bg-gray-50/20">
+              {cart.length === 0 ? <p className="text-center text-gray-400 mt-20">Vide</p> : cart.map(item => (
+                <div key={item.id} className="flex gap-4 p-3 bg-white rounded-xl shadow-sm border mb-4">
+                  <img src={item.image || burgerImg} className="w-16 h-16 object-cover rounded-lg" />
+                  <div className="flex-1">
+                    <h4 className="font-bold text-sm">{item.name}</h4>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="font-bold text-[#C03434]">{item.price}</span>
+                      <button onClick={() => updateCartQuantity(item.id, -1)} className="text-xs text-gray-400">Retirer</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {cart.length > 0 && (
+              <div className="p-6 border-t bg-white">
+                <button onClick={() => setIsCheckoutMode(true)} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg">Commander ({cartTotal.toFixed(2)} DH)</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {cartAnimations.map(anim => (
-        <div
-          key={anim.id}
-          className="fixed z-[9999] w-16 h-16 rounded-full overflow-hidden shadow-2xl border-2 border-white pointer-events-none animate-fly-to-cart"
-          style={{
-            '--start-x': `${anim.x}px`,
-            '--start-y': `${anim.y}px`,
-          }}
-        >
-          <img src={anim.image} alt="Flying item" className="w-full h-full object-cover" />
+        <div key={anim.id} className="fixed z-[9999] w-12 h-12 rounded-full overflow-hidden border-2 border-white animate-fly-to-cart pointer-events-none" style={{ '--start-x': `${anim.x}px`, '--start-y': `${anim.y}px` }}>
+          <img src={anim.image} className="w-full h-full object-cover" />
         </div>
       ))}
 
-      {/* Floating Cart Button */}
       {cartItemCount > 0 && (
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-gradient-to-r from-[#C03434] to-[#a32222] text-white p-4 rounded-full shadow-[0_10px_30px_-5px_rgba(192,52,52,0.5)] transition-all duration-300 flex items-center justify-center group ${isCartBumping ? 'scale-125 hover:scale-125' : 'hover:-translate-y-1'}`}
-        >
-          <div className="relative">
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span className="absolute -top-2 -right-2 bg-white text-[#C03434] text-[11px] font-bold w-[22px] h-[22px] rounded-full flex items-center justify-center shadow-sm">
-              {cartItemCount}
-            </span>
-          </div>
+        <button onClick={() => setIsCartOpen(true)} className={`fixed bottom-8 right-8 z-[60] bg-[#C03434] text-white p-4 rounded-full shadow-2xl transition-transform ${isCartBumping ? 'scale-125' : 'hover:scale-110'}`}>
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <span className="absolute -top-1 -right-1 bg-white text-[#C03434] text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-red-50">{cartItemCount}</span>
         </button>
       )}
 
-      {/* Cart Drawer Slide-out */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[120] flex justify-end">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity animate-backdrop-entry"
-            onClick={() => setIsCartOpen(false)}
-          ></div>
-          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col transform transition-transform duration-300 animate-[slideInRight_0.4s_ease-out_forwards]">
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-[#FDFCFB]">
-              <h2 className="text-2xl font-bold font-souvenir_std text-emerald-950 flex items-center gap-2">
-                {isCheckoutMode && !checkoutSuccess && (
-                  <button onClick={() => setIsCheckoutMode(false)} className="mr-2 text-gray-400 hover:text-emerald-950 transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                  </button>
-                )}
-                <span>{checkoutSuccess ? 'Succès' : isCheckoutMode ? 'Validation' : 'Panier'}</span>
-                {!checkoutSuccess && !isCheckoutMode && (
-                  <span className="bg-red-50 text-[#C03434] text-sm px-2.5 py-0.5 rounded-full font-sans tracking-widest">{cartItemCount}</span>
-                )}
-              </h2>
-              <button onClick={() => setIsCartOpen(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-
-            {/* Items or Checkout Form */}
-            {checkoutSuccess ? (
-              <div className="h-full flex flex-col items-center justify-center p-6 text-center animate-[modalScale_0.4s_ease-out_forwards]">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 text-emerald-600">
-                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <h3 className="text-2xl font-bold font-souvenir_std text-emerald-950 mb-2">Commande confirmée !</h3>
-                <p className="text-gray-500 mb-6">Merci {checkoutForm.first_name}. Votre commande a été envoyée en cuisine avec succès.</p>
-              </div>
-            ) : isCheckoutMode ? (
-              <div className="flex-1 overflow-y-auto p-5 bg-white">
-                <form id="checkout-form" onSubmit={handleCheckoutSubmit} className="flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <input required type="text" placeholder="Prénom" value={checkoutForm.first_name} onChange={e => setCheckoutForm({ ...checkoutForm, first_name: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans" />
-                    <input required type="text" placeholder="Nom" value={checkoutForm.last_name} onChange={e => setCheckoutForm({ ...checkoutForm, last_name: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans" />
-                  </div>
-                  <input required type="tel" placeholder="Téléphone" value={checkoutForm.phone} onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans" />
-                  <textarea required placeholder="Adresse de livraison" value={checkoutForm.address} onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} rows="2" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans resize-none"></textarea>
-                  <textarea placeholder="Notes pour la commande (optionnel)" value={checkoutForm.notes} onChange={e => setCheckoutForm({ ...checkoutForm, notes: e.target.value })} rows="2" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] focus:ring-2 focus:ring-[#C03434]/20 transition-all font-sans resize-none"></textarea>
-
-                  <div className="mt-2">
-                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Mode de Paiement</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setCheckoutForm({ ...checkoutForm, payment_method: 'Cash on Delivery' })}
-                        className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all ${checkoutForm.payment_method === 'Cash on Delivery' ? 'border-[#C03434] bg-red-50/50 text-[#C03434]' : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
-                      >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${checkoutForm.payment_method === 'Cash on Delivery' ? 'bg-[#C03434] text-white' : 'bg-gray-200 text-gray-500'}`}>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        </div>
-                        <span className="text-[12px] font-bold">Espèces</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCheckoutForm({ ...checkoutForm, payment_method: 'Online' })}
-                        className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all ${checkoutForm.payment_method === 'Online' ? 'border-[#C03434] bg-red-50/50 text-[#C03434]' : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
-                      >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${checkoutForm.payment_method === 'Online' ? 'bg-[#C03434] text-white' : 'bg-gray-200 text-gray-500'}`}>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                        </div>
-                        <span className="text-[12px] font-bold">En ligne</span>
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto p-5 no-scrollbar bg-gray-50/50">
-                {cart.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                    <svg className="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <p className="text-lg font-medium text-gray-500">Votre panier est vide</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {cart.map(item => (
-                      <div key={item.id} className="flex gap-4 bg-white p-3 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100/60 transition-all hover:border-red-100">
-                        <div className="w-20 h-20 rounded-[14px] overflow-hidden bg-gray-50 shrink-0 border border-black/5">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between py-1">
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-bold text-emerald-950 text-[15px] leading-[1.2]">{item.name}</h4>
-                            <button onClick={() => updateCartQuantity(item.id, -item.quantity)} className="text-gray-300 hover:text-[#C03434] transition-colors shrink-0">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                          </div>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="font-bold text-[#C03434] text-[16px] font-forma_djr_display bg-red-50 px-2 py-0.5 rounded-lg">
-                              {(parseFloat(item.price.replace(" DH", "")) * item.quantity).toFixed(2).replace(/\.00$/, '')} DH
-                            </span>
-                            <div className="flex items-center gap-3 bg-[#fdfdfd] border border-gray-200 rounded-xl p-0.5 shadow-sm">
-                              <button onClick={() => updateCartQuantity(item.id, -1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-[9px] transition-all">-</button>
-                              <span className="font-bold text-sm text-emerald-950 min-w-[14px] text-center">{item.quantity}</span>
-                              <button onClick={() => updateCartQuantity(item.id, 1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-[9px] transition-all">+</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Footer Checkout Area */}
-            {!checkoutSuccess && cart.length > 0 && (
-              <div className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.08)]">
-                <div className="flex justify-between items-center mb-5">
-                  <span className="text-emerald-950 font-medium text-[16px]">Total panier</span>
-                  <span className="text-3xl font-bold text-[#C03434] font-forma_djr_display bg-clip-text text-transparent bg-gradient-to-r from-[#C03434] to-[#a32222]">{cartTotal.toFixed(2)} DH</span>
-                </div>
-                {isCheckoutMode ? (
-                  <button form="checkout-form" type="submit" disabled={isSubmitting} className="w-full bg-[#C03434] text-white h-[60px] rounded-[1.25rem] font-bold tracking-[0.1em] uppercase text-[14px] hover:bg-[#a32222] transition-all shadow-lg shadow-[#C03434]/20 hover:shadow-[#C03434]/40 hover:-translate-y-0.5 active:translate-y-px disabled:opacity-70 disabled:hover:translate-y-0 flex items-center justify-center gap-2">
-                    {isSubmitting ? (
-                      <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    ) : 'Confirmer et Payer'}
-                  </button>
-                ) : (
-                  <button onClick={() => setIsCheckoutMode(true)} className="w-full bg-emerald-950 text-white h-[60px] rounded-[1.25rem] font-bold tracking-[0.15em] uppercase text-[13px] hover:bg-emerald-900 transition-all shadow-lg shadow-emerald-950/20 hover:shadow-emerald-950/40 hover:-translate-y-0.5 active:translate-y-px">
-                    Valider la commande
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-          <style dangerouslySetInnerHTML={{
-            __html: `
-             @keyframes slideInRight {
-               from { transform: translateX(100%); }
-               to { transform: translateX(0); }
-             }
-             `
-          }} />
-        </div>
-      )
-      }
-
-      {/* Global Menu Styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes flyToCart {
           0% { top: var(--start-y); left: var(--start-x); transform: translate(-50%, -50%) scale(1); opacity: 1; }
-          20% { top: calc(var(--start-y) - 50px); transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
           100% { top: calc(100vh - 50px); left: calc(100vw - 50px); transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
         }
-        .animate-fly-to-cart {
-          animation: flyToCart 0.7s cubic-bezier(0.5, 0, 0.2, 1) forwards;
-        }
-        `
-      }} />
-    </div >
+        .animate-fly-to-cart { animation: flyToCart 0.7s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}} />
+    </div>
   );
 }

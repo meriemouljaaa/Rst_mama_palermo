@@ -1,9 +1,15 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import logoImg from "../../assets/logo-loading.png";
 
 export const LoadingScreen = () => {
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-white">
+        <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-white"
+        >
             {/* Curtain Layers */}
             <div className="absolute inset-x-0 top-0 h-1/2 bg-[#00513e] animate-curtain-down"></div>
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[#00513e] animate-curtain-up"></div>
@@ -92,6 +98,6 @@ export const LoadingScreen = () => {
                     animation: curtain-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }
             `}</style>
-        </div>
+        </motion.div>
     );
 };

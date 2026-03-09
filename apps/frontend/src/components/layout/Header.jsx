@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { navigationData } from "../../data/navigationData";
 import standardLogo from "../../assets/logos/logo_navbar.png";
 import whiteLogo from "../../assets/logos/logo_navbar_white.png";
@@ -8,6 +8,7 @@ export function Header({ scrollToSection, refs }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -32,7 +33,7 @@ export function Header({ scrollToSection, refs }) {
         ref.current.scrollIntoView({ behavior: "smooth" });
       }
     } else {
-      window.location.href = item.href;
+      navigate(item.href);
     }
   };
 

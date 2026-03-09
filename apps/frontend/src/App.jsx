@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { io } from "socket.io-client";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Header } from "./components/layout/Header";
 import { HeroSection } from "./components/sections/HeroSection";
 import { AboutSection } from "./components/sections/AboutSection";
@@ -12,22 +13,12 @@ import { Footer } from "./components/layout/Footer";
 import { LoadingScreen } from "./components/ui/LoadingScreen";
 import Menu from "./menu/Menu";
 import Carte from "./carte/Carte";
-import Contact from "./contact/Contact"
+import Contact from "./contact/Contact";
+import PageWrapper from "./components/layout/PageWrapper";
 
-function MainPage() {
+function MainPage({ isLoading }) {
   const aboutRef = useRef(null);
   const conceptRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simulation of initial site loading
-  useEffect(() => {
-    // We add a delay for the animation to play out
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const scrollToSection = (ref) => {
     if (ref?.current) {
@@ -41,59 +32,81 @@ function MainPage() {
     }
   };
 
-  const [notification, setNotification] = useState(null);
+  return (
+    <div className={`relative min-h-screen w-full overflow-x-hidden bg-white font-forma_djr_display transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'} md:bg-[linear-gradient(to_right,rgb(255,255,255),rgb(255,255,255)_7.69231%,rgb(0,81,62)_7.69231%,rgb(0,81,62)_15.3846%,rgb(255,255,255)_15.3846%,rgb(255,255,255)_23.0769%,rgb(0,81,62)_23.0769%,rgb(0,81,62)_30.7692%,rgb(255,255,255)_30.7692%,rgb(255,255,255)_38.4615%,rgb(0,81,62)_38.4615%,rgb(0,81,62)_46.1538%,rgb(255,255,255)_46.1538%,rgb(255,255,255)_53.8462%,rgb(0,81,62)_53.8462%,rgb(0,81,62)_61.5385%,rgb(255,255,255)_61.5385%,rgb(255,255,255)_69.2308%,rgb(0,81,62)_69.2308%,rgb(0,81,62)_76.9231%,rgb(255,255,255)_76.9231%,rgb(255,255,255)_84.6154%,rgb(0,81,62)_84.6154%,rgb(0,81,62)_92.3077%,rgb(255,255,255)_92.3077%,rgb(255,255,255)_100%,rgb(0,81,62)_100%,rgb(0,81,62)_107.692%)]`}>
+      <div className="relative box-border">
+        <div className="absolute box-border h-px top-0"></div>
+      </div>
 
-  useEffect(() => {
-    const socket = io("http://localhost:3001");
+      <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
 
-    socket.on("orderStatusChanged", (data) => {
-      setNotification(`Order #${data.orderId} is now: ${data.status}`);
-      setTimeout(() => setNotification(null), 5000);
-    });
+      <main>
+        <HeroSection scrollToAbout={() => scrollToSection(aboutRef)} />
+        <AboutSection ref={aboutRef} scrollToConcept={scrollToConcept} />
+        <ConceptSection ref={conceptRef} />
+        <ProductsSection />
+        <QualitySection />
+        <RestaurantsSection />
+      </main>
 
-    return () => socket.disconnect();
-  }, []);
+      <Footer refs={{ aboutRef, conceptRef }} />
+    </div>
+  );
+}
+
+function AnimatedRoutes({ isLoading }) {
+  const location = useLocation();
 
   return (
-    <>
-      {isLoading && <LoadingScreen />}
-      <div className={`relative min-h-screen w-full overflow-x-hidden bg-white font-forma_djr_display transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'} md:bg-[linear-gradient(to_right,rgb(255,255,255),rgb(255,255,255)_7.69231%,rgb(0,81,62)_7.69231%,rgb(0,81,62)_15.3846%,rgb(255,255,255)_15.3846%,rgb(255,255,255)_23.0769%,rgb(0,81,62)_23.0769%,rgb(0,81,62)_30.7692%,rgb(255,255,255)_30.7692%,rgb(255,255,255)_38.4615%,rgb(0,81,62)_38.4615%,rgb(0,81,62)_46.1538%,rgb(255,255,255)_46.1538%,rgb(255,255,255)_53.8462%,rgb(0,81,62)_53.8462%,rgb(0,81,62)_61.5385%,rgb(255,255,255)_61.5385%,rgb(255,255,255)_69.2308%,rgb(0,81,62)_69.2308%,rgb(0,81,62)_76.9231%,rgb(255,255,255)_76.9231%,rgb(255,255,255)_84.6154%,rgb(0,81,62)_84.6154%,rgb(0,81,62)_92.3077%,rgb(255,255,255)_92.3077%,rgb(255,255,255)_100%,rgb(0,81,62)_100%,rgb(0,81,62)_107.692%)]`}>
-        <div className="relative box-border">
-          <div className="absolute box-border h-px top-0"></div>
-        </div>
-
-        {/* On passe la fonction scroll et les refs au Header */}
-        <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
-
-        <main>
-          {notification && (
-            <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl font-bold transition-all duration-300">
-              🍕 {notification}
-            </div>
-          )}
-          <HeroSection scrollToAbout={() => scrollToSection(aboutRef)} />
-          <AboutSection ref={aboutRef} scrollToConcept={scrollToConcept} />
-          <ConceptSection ref={conceptRef} />
-          <ProductsSection />
-          <QualitySection />
-          <RestaurantsSection />
-        </main>
-
-        <Footer refs={{ aboutRef, conceptRef }} />
-      </div>
-    </>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageWrapper><MainPage isLoading={isLoading} /></PageWrapper>} />
+        <Route path="/menu" element={<PageWrapper><Menu /></PageWrapper>} />
+        <Route path="/carte" element={<PageWrapper><Carte /></PageWrapper>} />
+        <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+      </Routes>
+    </AnimatePresence>
   );
 }
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+
+  // Simulation of initial site loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Global socket notification
+  useEffect(() => {
+    const socket = io("http://localhost:3001");
+    socket.on("orderStatusChanged", (data) => {
+      setNotification(`Order #${data.orderId} is now: ${data.status}`);
+      setTimeout(() => setNotification(null), 5000);
+    });
+    return () => socket.disconnect();
+  }, []);
+
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="/carte" element={<Carte />} />
-        <Route path="/contact" element={<Contact />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <LoadingScreen key="loading-screen" />
+        ) : (
+          <div key="app-content">
+            {notification && (
+              <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[999] bg-green-600 text-white px-6 py-3 rounded-full shadow-xl font-bold transition-all duration-300 animate-bounce">
+                🍕 {notification}
+              </div>
+            )}
+            <AnimatedRoutes isLoading={isLoading} />
+          </div>
+        )}
+      </AnimatePresence>
     </Router>
   );
 }

@@ -115,8 +115,8 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header avec style Pizza Cosy */}
-      <div className="relative bg-emerald-900 text-white py-16 px-5">
+      {/* Hero Section */}
+      <div className="relative bg-emerald-900 text-white pt-[100px] py-16 px-5">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl font-bold mb-4 font-souvenir_std tracking-[-2px] md:text-6xl">
             Contactez-nous
@@ -125,14 +125,6 @@ export default function Contact() {
             Une question ? Une suggestion ? Nous sommes là pour vous écouter
           </p>
         </div>
-
-        {/* Bouton de retour stylé */}
-        <Link
-          to="/"
-          className="absolute top-8 left-8 text-white text-base font-medium items-center bg-transparent box-border gap-x-2 flex justify-center leading-4 min-h-[50px] min-w-[50px] outline-transparant outline gap-y-2 text-center uppercase align-middle border-white px-4 py-3 rounded-[25px] border-2 border-solid font-forma_djr_display transition-colors duration-200 hover:bg-white hover:text-emerald-900 md:text-lg md:min-h-[60px] md:px-6 md:py-4 md:rounded-[30px]"
-        >
-          ← Retour
-        </Link>
       </div>
 
       {/* Contenu principal */}

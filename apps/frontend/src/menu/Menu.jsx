@@ -224,6 +224,29 @@ export default function Menu() {
     if (current !== activeTabMobile) setActiveTabMobile(current);
   };
 
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleDesktopScroll = () => {
+      const scrollPos = window.scrollY + 200; // Offset for sticky headers
+      let current = activeTabDesktop;
+
+      for (const cat of dynamicMenu) {
+        const el = document.getElementById(cat.id);
+        if (el && el.offsetTop <= scrollPos) {
+          current = cat.id;
+        }
+      }
+
+      if (current !== activeTabDesktop) {
+        setActiveTabDesktop(current);
+      }
+    };
+
+    window.addEventListener('scroll', handleDesktopScroll);
+    return () => window.removeEventListener('scroll', handleDesktopScroll);
+  }, [isMobile, dynamicMenu, activeTabDesktop]);
+
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault(); setIsSubmitting(true);
     try {
@@ -242,13 +265,8 @@ export default function Menu() {
     <div className="bg-[#FDFCFB] text-emerald-950 font-forma_djr_display min-h-screen">
 
       {/* MOBILE */}
-      <div className={`${isMobile ? 'flex' : 'hidden'} md:hidden flex-col h-[100dvh] bg-gray-50 overflow-hidden fixed inset-0 z-50`}>
-        <div className="flex items-center justify-between px-4 py-3.5 bg-gray-50 border-b shrink-0">
-          <Link to="/"><svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
-          <span className="text-[19px] font-bold">Le Menu</span>
-          <div className="w-5" />
-        </div>
-        <div className="flex flex-1 overflow-hidden">
+      <div className={`${isMobile ? 'flex' : 'hidden'} md:hidden flex-col h-[100dvh] bg-gray-50 overflow-hidden fixed inset-0 z-50 pt-[65px]`}>
+        <div className="flex-1 overflow-hidden flex">
           <div className="w-[85px] bg-white border-r overflow-y-auto no-scrollbar pb-24 shrink-0 shadow-sm">
             {dynamicMenu.map(cat => (
               <button key={cat.id} onClick={() => scrollToSectionMobile(cat.id)} className={`w-full flex flex-col items-center py-5 px-1 gap-2 ${activeTabMobile === cat.id ? 'bg-gray-50' : 'opacity-60'}`}>
@@ -276,20 +294,16 @@ export default function Menu() {
         </div>
       </div>
 
-      {/* DESKTOP */}
       <div className={`${isMobile ? 'hidden' : 'block'} hidden md:block pb-20`}>
-        <div className="relative h-[45vh] w-full flex flex-col justify-center items-center overflow-hidden bg-emerald-950">
+        <div className="relative h-[45vh] pt-[100px] w-full flex flex-col justify-center items-center overflow-hidden bg-emerald-950">
           <img src={pizzaImg} className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-emerald-950/80 to-transparent" />
-          <Link to="/" className="absolute top-10 left-10 text-white text-sm font-medium flex items-center gap-2 bg-black/20 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 hover:bg-white hover:text-emerald-900 transition-all">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>Retour
-          </Link>
           <div className="relative z-10 text-center flex flex-col items-center">
             <span className="text-emerald-300 font-bold tracking-[0.2em] uppercase text-xs mb-4 border border-emerald-300/30 px-4 py-1.5 rounded-full backdrop-blur-md">Artisanal & Traditionnel</span>
-            <h1 className="text-8xl font-bold font-souvenir_std tracking-tight text-white leading-none">La <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffe4b5] to-white">Carte</span></h1>
+            <h1 className="text-8xl font-bold font-souvenir_std tracking-tight text-white leading-none">Le <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffe4b5] to-white">Menu</span></h1>
           </div>
         </div>
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl border-b shadow-sm">
+        <div className="sticky top-[70px] z-40 bg-white/95 backdrop-blur-2xl border-b shadow-sm">
           <div className="max-w-7xl mx-auto flex justify-center space-x-10">
             {dynamicMenu.map(cat => (
               <button key={cat.id} onClick={() => scrollToSectionDesktop(cat.id)} className={`relative py-5 text-[13px] uppercase tracking-widest font-bold transition-colors ${activeTabDesktop === cat.id ? "text-[#C03434]" : "text-emerald-950/40 hover:text-emerald-950"}`}>

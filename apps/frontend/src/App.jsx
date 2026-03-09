@@ -12,7 +12,6 @@ import { RestaurantsSection } from "./components/sections/RestaurantsSection";
 import { Footer } from "./components/layout/Footer";
 import { LoadingScreen } from "./components/ui/LoadingScreen";
 import Menu from "./menu/Menu";
-import Carte from "./carte/Carte";
 import Contact from "./contact/Contact";
 import PageWrapper from "./components/layout/PageWrapper";
 
@@ -38,8 +37,6 @@ function MainPage({ isLoading }) {
         <div className="absolute box-border h-px top-0"></div>
       </div>
 
-      <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
-
       <main>
         <HeroSection scrollToAbout={() => scrollToSection(aboutRef)} />
         <AboutSection ref={aboutRef} scrollToConcept={scrollToConcept} />
@@ -48,21 +45,18 @@ function MainPage({ isLoading }) {
         <QualitySection />
         <RestaurantsSection />
       </main>
-
-      <Footer refs={{ aboutRef, conceptRef }} />
     </div>
   );
 }
 
-function AnimatedRoutes({ isLoading }) {
+function AnimatedRoutes({ isLoading, aboutRef, conceptRef, scrollToSection }) {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><MainPage isLoading={isLoading} /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper><MainPage isLoading={isLoading} aboutRef={aboutRef} conceptRef={conceptRef} scrollToSection={scrollToSection} /></PageWrapper>} />
         <Route path="/menu" element={<PageWrapper><Menu /></PageWrapper>} />
-        <Route path="/carte" element={<PageWrapper><Carte /></PageWrapper>} />
         <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
@@ -72,6 +66,15 @@ function AnimatedRoutes({ isLoading }) {
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState(null);
+
+  const aboutRef = useRef(null);
+  const conceptRef = useRef(null);
+
+  const scrollToSection = (ref) => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   // Simulation of initial site loading
   useEffect(() => {
@@ -97,13 +100,15 @@ export default function App() {
         {isLoading ? (
           <LoadingScreen key="loading-screen" />
         ) : (
-          <div key="app-content">
+          <div key="app-content" className="relative">
+            <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
             {notification && (
               <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[999] bg-green-600 text-white px-6 py-3 rounded-full shadow-xl font-bold transition-all duration-300 animate-bounce">
                 🍕 {notification}
               </div>
             )}
-            <AnimatedRoutes isLoading={isLoading} />
+            <AnimatedRoutes isLoading={isLoading} aboutRef={aboutRef} conceptRef={conceptRef} scrollToSection={scrollToSection} />
+            <Footer refs={{ aboutRef, conceptRef }} />
           </div>
         )}
       </AnimatePresence>

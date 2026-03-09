@@ -87,23 +87,23 @@ export function Header({ scrollToSection, refs }) {
                     }`}
                 >
                   {item.label}
-                  {/* Underline animated effect */}
                   <span className={`absolute bottom-0 left-0 w-0 h-[2px] transition-all duration-300 group-hover:w-full ${isScrolled ? "bg-emerald-900" : "bg-red-500"
                     }`}></span>
                 </button>
               </li>
             ))}
+            <li className="relative group">
+              <Link
+                to="/contact"
+                className={`px-8 py-2.5 rounded-full font-bold uppercase tracking-tighter text-sm transition-all duration-500 shadow-lg hover:shadow-xl hover:-translate-y-0.5 ${isScrolled
+                  ? "bg-emerald-900 text-white hover:bg-emerald-800"
+                  : "bg-white text-emerald-900 hover:bg-gray-100"
+                  }`}
+              >
+                Contact
+              </Link>
+            </li>
           </ul>
-
-          <Link
-            to="/contact"
-            className={`px-8 py-2.5 rounded-full font-bold uppercase tracking-tighter text-sm transition-all duration-500 shadow-lg hover:shadow-xl hover:-translate-y-0.5 ${isScrolled
-              ? "bg-emerald-900 text-white hover:bg-emerald-800"
-              : "bg-white text-emerald-900 hover:bg-gray-100"
-              }`}
-          >
-            Contact
-          </Link>
         </div>
 
         {/* Navigation Mobile Overlay */}
@@ -131,13 +131,13 @@ export function Header({ scrollToSection, refs }) {
                 </button>
               </li>
             ))}
-            <li className={`mt-10 transition-all duration-700 delay-500 transform ${isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
+            <li className={`mt-10 transition-all duration-700 delay-200 transform ${isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
               <Link
                 to="/contact"
                 onClick={() => setIsMenuOpen(false)}
                 className="inline-block px-12 py-4 bg-red-600 text-white rounded-full text-xl font-bold uppercase tracking-widest shadow-2xl"
               >
-                Nous Contacter
+                Contact
               </Link>
             </li>
           </ul>

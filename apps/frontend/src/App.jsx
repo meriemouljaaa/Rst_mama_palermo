@@ -96,10 +96,14 @@ export default function App() {
 
   return (
     <Router>
-      <AnimatePresence mode="wait">
-        {isLoading ? (
-          <LoadingScreen key="loading-screen" />
-        ) : (
+      <div className="relative">
+        <AnimatePresence>
+          {isLoading && (
+            <LoadingScreen key="loading-screen" />
+          )}
+        </AnimatePresence>
+
+        {!isLoading && (
           <div key="app-content" className="relative">
             <Header scrollToSection={scrollToSection} refs={{ aboutRef, conceptRef }} />
             {notification && (
@@ -111,7 +115,7 @@ export default function App() {
             <Footer refs={{ aboutRef, conceptRef }} />
           </div>
         )}
-      </AnimatePresence>
+      </div>
     </Router>
   );
 }

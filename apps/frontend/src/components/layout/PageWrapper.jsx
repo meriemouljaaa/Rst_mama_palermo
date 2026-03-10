@@ -1,7 +1,16 @@
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import logoImg from "../../assets/logo-loading.png";
 
+let isFirstLoad = true;
+
 const PageWrapper = ({ children }) => {
+    const [initialLoad] = useState(isFirstLoad);
+
+    useEffect(() => {
+        isFirstLoad = false;
+    }, []);
+
     return (
         <>
             {/* 1. Static Brand Backdrop to prevent layout flashes */}
@@ -81,7 +90,7 @@ const PageWrapper = ({ children }) => {
                 style={{
                     position: 'fixed',
                     inset: 0,
-                    display: 'flex',
+                    display: initialLoad ? 'none' : 'flex',
                     zIndex: 9999,
                     pointerEvents: 'none'
                 }}
@@ -102,13 +111,13 @@ const PageWrapper = ({ children }) => {
 
             {/* 4. Optimized Content Entrance (No heavy filters like Blur) */}
             <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: initialLoad ? 1 : 0, y: initialLoad ? 0 : 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{
                     duration: 0.4,
                     ease: 'easeOut',
-                    delay: 0.1 // Slight delay so it appears while shutters opening
+                    delay: initialLoad ? 0 : 0.1 // Slight delay so it appears while shutters opening
                 }}
                 style={{
                     width: '100%',

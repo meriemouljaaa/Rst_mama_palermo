@@ -26,6 +26,7 @@ services:
   backend:
     build:
       context: ./apps/backend
+    image: mp-backend
     container_name: mp-backend
     command: npm run dev
     ports:
@@ -49,6 +50,7 @@ services:
     build:
       context: ./apps/frontend
       target: build
+    image: mp-frontend
     container_name: mp-frontend
     command: npm run dev -- --host
     ports:
@@ -65,6 +67,7 @@ services:
     build:
       context: ./apps/admin
       target: build
+    image: mp-admin
     container_name: mp-admin
     command: npm run dev -- --host --port 5174
     ports:
@@ -80,10 +83,10 @@ services:
 volumes:
   postgres_data:
     external: true
-    name: rst_mama_palermo_postgres_data
+    name: mp_postgres_data
   redis_data:
     external: true
-    name: rst_mama_palermo_redis_data
+    name: mp_redis_data
   backend_uploads:
     external: true
-    name: rst_mama_palermo_backend_uploads
+    name: mp_backend_uploads

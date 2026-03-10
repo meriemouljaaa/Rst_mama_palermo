@@ -90,7 +90,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
         // Return the path that the frontend can use to load the image
-        const publicUrl = `http://localhost:3001/uploads/${req.file.filename}`;
+        const publicUrl = `http://localhost:5000/uploads/${req.file.filename}`;
         res.json({ url: publicUrl });
     } catch (err) {
         console.error(err);

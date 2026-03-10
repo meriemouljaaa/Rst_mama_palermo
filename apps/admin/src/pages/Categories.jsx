@@ -18,8 +18,8 @@ import {
     Upload
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api/categories';
-const PRODUCTS_API = 'http://localhost:3001/api/products';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : 'http://localhost:5000/api/categories';
+const PRODUCTS_API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : 'http://localhost:5000/api/products';
 
 export default function Categories() {
     const [categories, setCategories] = useState([]);
@@ -92,7 +92,8 @@ export default function Categories() {
                 const uploadData = new FormData();
                 uploadData.append('image', selectedFile);
 
-                const uploadRes = await fetch('http://localhost:3001/api/upload', {
+                const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const uploadRes = await fetch(`${API_BASE}/api/upload`, {
                     method: 'POST',
                     body: uploadData
                 });

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload, Tag, AlignLeft, Info, DollarSign, Filter, ChevronDown } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api/products';
-const CATEGORY_API_URL = 'http://localhost:3001/api/categories';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : 'http://localhost:5000/api/products';
+const CATEGORY_API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : 'http://localhost:5000/api/categories';
 
 export default function Products() {
     const [products, setProducts] = useState([]);
@@ -93,7 +93,7 @@ export default function Products() {
                 const uploadData = new FormData();
                 uploadData.append('image', selectedFile);
 
-                const uploadRes = await fetch('http://localhost:3001/api/upload', {
+                const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload`, {
                     method: 'POST',
                     body: uploadData
                 });

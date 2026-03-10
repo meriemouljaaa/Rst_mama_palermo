@@ -26,11 +26,12 @@ export default function Dashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            const statsRes = await fetch('http://localhost:3001/api/dashboard/stats');
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const statsRes = await fetch(`${API_BASE}/api/dashboard/stats`);
             const statsData = await statsRes.json();
             setStats(statsData);
 
-            const ordersRes = await fetch('http://localhost:3001/api/orders');
+            const ordersRes = await fetch(`${API_BASE}/api/orders`);
             const ordersData = await ordersRes.json();
             setRecentOrders(ordersData.slice(0, 5)); // Just top 5
         } catch (err) {
@@ -41,7 +42,7 @@ export default function Dashboard() {
     useEffect(() => {
         fetchDashboardData();
 
-        const socket = io('http://localhost:3001');
+        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
         socket.on('orderStatusChanged', (data) => {
             console.log('Order status updated:', data);

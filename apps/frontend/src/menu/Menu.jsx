@@ -103,9 +103,18 @@ export default function Menu() {
     "desserts": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté" },
     "boissons": { banner: sodaImg, title: "Rafraîchissements", subtitle: "Boissons fraîches & jus naturels" },
     "plats": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal" },
+    "viande & poulet": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal" },
     "burgers & sandwiches": { banner: burgerImg, title: "Gourmet Burgers", subtitle: "Pain brioché & sandwichs italiens" },
     "salades": { banner: saladesImg, title: "Insalate", subtitle: "Fraîcheur & saveurs méditerranéennes" }
   }), []);
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.includes('localhost:3001')) {
+      return url.replace('localhost:3001', 'localhost:5000');
+    }
+    return url;
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -116,9 +125,10 @@ export default function Menu() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
         const [prodRes, catRes] = await Promise.all([
-          fetch("http://localhost:3001/api/products"),
-          fetch("http://localhost:3001/api/categories")
+          fetch(`${API_BASE}/api/products`),
+          fetch(`${API_BASE}/api/categories`)
         ]);
         const products = await prodRes.json();
         const categories = await catRes.json();
@@ -131,10 +141,15 @@ export default function Menu() {
         const dynamicStructure = rootCategories.map(root => {
           const subIds = categories.filter(c => c.id === root.id || c.parent_id === root.id).map(c => c.id);
           const items = products.filter(p => p.is_available && subIds.includes(p.category_id)).map(p => ({
-            id: p.id, name: p.name, description: p.description, price: `${p.price} DH`, image: p.image_url || null, variants: p.variants || []
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            price: `${p.price} DH`,
+            image: getImageUrl(p.image_url),
+            variants: p.variants || []
           }));
           if (items.length === 0) return null;
-          const style = CATEGORY_STYLE_META[root.name.toLowerCase()] || { banner: root.image_url || burgerImg, title: root.name, subtitle: root.description };
+          const style = CATEGORY_STYLE_META[root.name.toLowerCase()] || { banner: getImageUrl(root.image_url) || burgerImg, title: root.name, subtitle: root.description };
           return { id: `cat-${root.id}`, title: style.title, subtitle: style.subtitle, bannerImage: style.banner, items };
         }).filter(Boolean);
 
@@ -250,9 +265,10 @@ export default function Menu() {
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault(); setIsSubmitting(true);
     try {
-      const cRes = await fetch("http://localhost:3001/api/customers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(checkoutForm) });
+      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const cRes = await fetch(`${API_BASE}/api/customers`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(checkoutForm) });
       const customer = await cRes.json();
-      await fetch("http://localhost:3001/api/orders", {
+      await fetch(`${API_BASE}/api/orders`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customer_id: customer.id, total_amount: cartTotal, notes: checkoutForm.notes, items: cart.map(i => ({ product_id: i.dbId || null, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(i.price.replace(" DH", "")), variant_name: i.variant_name })), payment_method: checkoutForm.payment_method })
       });
@@ -366,11 +382,20 @@ export default function Menu() {
               {cart.length === 0 ? <p className="text-center text-gray-400 mt-20">Vide</p> : cart.map(item => (
                 <div key={item.id} className="flex gap-4 p-3 bg-white rounded-xl shadow-sm border mb-4">
                   <img src={item.image || burgerImg} className="w-16 h-16 object-cover rounded-lg" />
-                  <div className="flex-1">
-                    <h4 className="font-bold text-sm">{item.name}</h4>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div className="flex justify-between items-start gap-2">
+                      <h4 className="font-bold text-sm leading-tight flex-1">{item.name}</h4>
+                      <button onClick={() => updateCartQuantity(item.id, -item.quantity)} className="p-1.5 text-gray-400 hover:text-[#C03434] transition-colors rounded-lg hover:bg-red-50 -mt-1 -mr-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </button>
+                    </div>
                     <div className="flex justify-between items-center mt-2">
                       <span className="font-bold text-[#C03434]">{item.price}</span>
-                      <button onClick={() => updateCartQuantity(item.id, -1)} className="text-xs text-gray-400">Retirer</button>
+                      <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                        <button onClick={() => updateCartQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">-</button>
+                        <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
+                        <button onClick={() => updateCartQuantity(item.id, 1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">+</button>
+                      </div>
                     </div>
                   </div>
                 </div>

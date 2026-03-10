@@ -86,7 +86,7 @@ export default function App() {
 
   // Global socket notification
   useEffect(() => {
-    const socket = io("http://localhost:3001");
+    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000");
     socket.on("orderStatusChanged", (data) => {
       setNotification(`Order #${data.orderId} is now: ${data.status}`);
       setTimeout(() => setNotification(null), 5000);

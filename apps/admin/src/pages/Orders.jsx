@@ -32,7 +32,8 @@ export default function Orders() {
     const fetchOrders = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch('http://localhost:3001/api/orders');
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await fetch(`${API_BASE}/api/orders`);
             const data = await res.json();
             setOrders(data);
         } catch (err) {
@@ -45,7 +46,7 @@ export default function Orders() {
     useEffect(() => {
         fetchOrders();
 
-        const socket = io('http://localhost:3001');
+        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
         socket.on('orderStatusChanged', () => fetchOrders());
         socket.on('newOrder', () => fetchOrders());
 
@@ -54,7 +55,8 @@ export default function Orders() {
 
     const updateStatus = async (id, status) => {
         try {
-            await fetch(`http://localhost:3001/api/orders/${id}/status`, {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            await fetch(`${API_BASE}/api/orders/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })

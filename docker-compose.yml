@@ -1,4 +1,4 @@
-name: mp
+name: Mamma-Palermo
 version: '3.8'
 
 services:
@@ -14,7 +14,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -23,7 +22,6 @@ services:
       - "5004:6379"
     volumes:
       - redis_data:/data
-    restart: unless-stopped
 
   backend:
     build:
@@ -46,7 +44,6 @@ services:
       - ./apps/backend:/app
       - /app/node_modules
       - ./apps/backend/uploads:/app/uploads
-    restart: unless-stopped
 
   frontend:
     build:
@@ -63,7 +60,6 @@ services:
       - /app/node_modules
     depends_on:
       - backend
-    restart: unless-stopped
 
   admin:
     build:
@@ -80,7 +76,6 @@ services:
       - /app/node_modules
     depends_on:
       - backend
-    restart: unless-stopped
 
 volumes:
   postgres_data:

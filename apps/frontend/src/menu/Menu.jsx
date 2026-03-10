@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, memo } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Image imports
 import pizzaImg from "../assets/products/pizza.jpg";
@@ -184,7 +186,8 @@ export default function Menu() {
   const [isCheckoutMode, setIsCheckoutMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
-  const [checkoutForm, setCheckoutForm] = useState({ first_name: '', last_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' });
+  const [checkoutForm, setCheckoutForm] = useState({ full_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' });
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => { localStorage.setItem('mamma_palermo_cart', JSON.stringify(cart)); }, [cart]);
 
@@ -263,17 +266,41 @@ export default function Menu() {
   }, [isMobile, dynamicMenu, activeTabDesktop]);
 
   const handleCheckoutSubmit = async (e) => {
-    e.preventDefault(); setIsSubmitting(true);
+    e.preventDefault();
+    if (checkoutForm.phone.length !== 10) {
+      alert("Le numéro de téléphone doit comporter exactement 10 chiffres.");
+      return;
+    }
+    setIsSubmitting(true);
     try {
+      const names = checkoutForm.full_name.trim().split(' ');
+      const firstName = names[0] || '';
+      const lastName = names.slice(1).join(' ') || '.';
+
       const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
-      const cRes = await fetch(`${API_BASE}/api/customers`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(checkoutForm) });
+      const cRes = await fetch(`${API_BASE}/api/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          phone: checkoutForm.phone,
+          address: checkoutForm.address
+        })
+      });
       const customer = await cRes.json();
       await fetch(`${API_BASE}/api/orders`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customer_id: customer.id, total_amount: cartTotal, notes: checkoutForm.notes, items: cart.map(i => ({ product_id: i.dbId || null, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(i.price.replace(" DH", "")), variant_name: i.variant_name })), payment_method: checkoutForm.payment_method })
       });
       setCart([]); setCheckoutSuccess(true);
-      setTimeout(() => { setIsCartOpen(false); setIsCheckoutMode(false); setCheckoutSuccess(false); setCheckoutForm({ first_name: '', last_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' }); }, 3000);
+      setTimeout(() => {
+        setIsCartOpen(false);
+        setIsCheckoutMode(false);
+        setCheckoutSuccess(false);
+        setCheckoutForm({ full_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' });
+        setShowNotes(false);
+      }, 3000);
     } catch (err) { alert("Error"); } finally { setIsSubmitting(false); }
   };
 
@@ -347,8 +374,8 @@ export default function Menu() {
       </div>
 
       {/* Persistent Components */}
-      {selectedProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}>
+      {selectedProduct && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}>
           <div className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[850px] shadow-2xl flex flex-col md:flex-row relative" onClick={e => e.stopPropagation()}>
             <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/50 text-emerald-950 rounded-full flex items-center justify-center backdrop-blur-lg">✕</button>
             <div className="h-64 md:h-auto md:w-1/2 overflow-hidden"><img src={selectedProduct.image || burgerImg} className="w-full h-full object-cover" /></div>
@@ -370,50 +397,139 @@ export default function Menu() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[120] flex justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setIsCartOpen(false)} />
-          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b"><h2 className="text-2xl font-bold font-souvenir_std">Panier</h2><button onClick={() => setIsCartOpen(false)}>✕</button></div>
-            <div className="flex-1 overflow-y-auto p-5 no-scrollbar bg-gray-50/20">
-              {cart.length === 0 ? <p className="text-center text-gray-400 mt-20">Vide</p> : cart.map(item => (
-                <div key={item.id} className="flex gap-4 p-3 bg-white rounded-xl shadow-sm border mb-4">
-                  <img src={item.image || burgerImg} className="w-16 h-16 object-cover rounded-lg" />
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div className="flex justify-between items-start gap-2">
-                      <h4 className="font-bold text-sm leading-tight flex-1">{item.name}</h4>
-                      <button onClick={() => updateCartQuantity(item.id, -item.quantity)} className="p-1.5 text-gray-400 hover:text-[#C03434] transition-colors rounded-lg hover:bg-red-50 -mt-1 -mr-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      {createPortal(
+        <AnimatePresence>
+          {isCartOpen && (
+            <div className="fixed inset-0 z-[9999] flex justify-end overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+                onClick={() => setIsCartOpen(false)}
+              />
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col"
+              >
+                <div className="flex items-center justify-between p-5 border-b"><h2 className="text-2xl font-bold font-souvenir_std">{isCheckoutMode ? (checkoutSuccess ? "Bravo!" : "Livraison") : "Panier"}</h2><button onClick={() => { setIsCartOpen(false); setIsCheckoutMode(false); setCheckoutSuccess(false); }}>✕</button></div>
+
+                {isCheckoutMode ? (
+                  <form id="checkoutForm" onSubmit={handleCheckoutSubmit} className="flex-1 overflow-y-auto p-5 no-scrollbar bg-gray-50/20 flex flex-col gap-4">
+                    {!checkoutSuccess && (
+                      <button type="button" onClick={() => setIsCheckoutMode(false)} className="self-start text-sm font-bold text-gray-500 hover:text-[#C03434] transition-colors mb-2">
+                        ← Retour au panier
                       </button>
-                    </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="font-bold text-[#C03434]">{item.price}</span>
-                      <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                        <button onClick={() => updateCartQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">-</button>
-                        <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                        <button onClick={() => updateCartQuantity(item.id, 1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">+</button>
+                    )}
+
+                    {checkoutSuccess ? (
+                      <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-8">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h3 className="text-2xl font-bold text-emerald-950 font-souvenir_std">Commande Réussie!</h3>
+                        <p className="text-sm text-gray-500 max-w-[250px]">Votre commande a été enregistrée avec succès. Elle sera préparée dans les plus brefs délais.</p>
+                      </motion.div>
+                    ) : (
+                      <div className="space-y-4">
+                        <input required type="text" placeholder="Nom Complet" value={checkoutForm.full_name} onChange={e => setCheckoutForm({ ...checkoutForm, full_name: e.target.value })} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] transition-colors" />
+
+                        <div className="relative">
+                          <input required type="tel" placeholder="Téléphone (ex: 0612345678)" maxLength="10" value={checkoutForm.phone} onChange={e => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setCheckoutForm({ ...checkoutForm, phone: val });
+                          }} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] transition-colors" />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">
+                            {checkoutForm.phone.length}/10
+                          </span>
+                        </div>
+
+                        <textarea required placeholder="Adresse de livraison" value={checkoutForm.address} onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} rows="3" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] transition-colors resize-none"></textarea>
+
+                        {!showNotes ? (
+                          <button type="button" onClick={() => setShowNotes(true)} className="text-[13px] font-bold text-[#C03434] hover:underline flex items-center gap-1.5 ml-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            Ajouter une note
+                          </button>
+                        ) : (
+                          <textarea placeholder="Notes pour la commande..." value={checkoutForm.notes} onChange={e => setCheckoutForm({ ...checkoutForm, notes: e.target.value })} rows="2" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#C03434] transition-colors resize-none"></textarea>
+                        )}
+
+                        <div className="space-y-2 mt-2">
+                          <span className="text-[13px] font-bold text-emerald-950 uppercase tracking-widest pl-1">Méthode de paiement</span>
+                          <div className="grid grid-cols-2 gap-3">
+                            <label className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${checkoutForm.payment_method === 'Cash on Delivery' ? 'border-[#C03434] bg-red-50 text-[#C03434]' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                              <input type="radio" name="payment_method" value="Cash on Delivery" checked={checkoutForm.payment_method === 'Cash on Delivery'} onChange={e => setCheckoutForm({ ...checkoutForm, payment_method: e.target.value })} className="hidden" />
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                              <span className="text-[12px] font-bold text-center leading-tight">Paiement à la<br />livraison</span>
+                            </label>
+                            <label className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${checkoutForm.payment_method === 'Online' ? 'border-[#C03434] bg-red-50 text-[#C03434]' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                              <input type="radio" name="payment_method" value="Online" checked={checkoutForm.payment_method === 'Online'} onChange={e => setCheckoutForm({ ...checkoutForm, payment_method: e.target.value })} className="hidden" />
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                              <span className="text-[12px] font-bold text-center leading-tight">Paiement en<br />ligne</span>
+                            </label>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                  </form>
+                ) : (
+                  <div className="flex-1 overflow-y-auto p-5 no-scrollbar bg-gray-50/20">
+                    {cart.length === 0 ? <p className="text-center text-gray-400 mt-20">Vide</p> : cart.map(item => (
+                      <div key={item.id} className="flex gap-4 p-3 bg-white rounded-xl shadow-sm border mb-4">
+                        <img src={item.image || burgerImg} className="w-16 h-16 object-cover rounded-lg" />
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="font-bold text-sm leading-tight flex-1">{item.name}</h4>
+                            <button onClick={() => updateCartQuantity(item.id, -item.quantity)} className="p-1.5 text-gray-400 hover:text-[#C03434] transition-colors rounded-lg hover:bg-red-50 -mt-1 -mr-1">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </button>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="font-bold text-[#C03434]">{item.price}</span>
+                            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                              <button onClick={() => updateCartQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">-</button>
+                              <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
+                              <button onClick={() => updateCartQuantity(item.id, 1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">+</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                )}
+
+                {cart.length > 0 && !checkoutSuccess && (
+                  <div className="p-6 border-t bg-white relative z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+                    {isCheckoutMode ? (
+                      <button type="submit" form="checkoutForm" disabled={isSubmitting} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg disabled:opacity-70 transition-all flex justify-center items-center">
+                        {isSubmitting ? <span className="animate-pulse">En cours...</span> : `Confirmer (${cartTotal.toFixed(2)} DH)`}
+                      </button>
+                    ) : (
+                      <button onClick={() => setIsCheckoutMode(true)} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Commander ({cartTotal.toFixed(2)} DH)</button>
+                    )}
+                  </div>
+                )}
+              </motion.div>
             </div>
-            {cart.length > 0 && (
-              <div className="p-6 border-t bg-white">
-                <button onClick={() => setIsCheckoutMode(true)} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg">Commander ({cartTotal.toFixed(2)} DH)</button>
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
 
-      {cartAnimations.map(anim => (
-        <div key={anim.id} className="fixed z-[9999] w-12 h-12 rounded-full overflow-hidden border-2 border-white animate-fly-to-cart pointer-events-none" style={{ '--start-x': `${anim.x}px`, '--start-y': `${anim.y}px` }}>
+      {cartAnimations.map(anim => createPortal(
+        <div key={anim.id} className="fixed z-[10000] w-12 h-12 rounded-full overflow-hidden border-2 border-white animate-fly-to-cart pointer-events-none" style={{ '--start-x': `${anim.x}px`, '--start-y': `${anim.y}px` }}>
           <img src={anim.image} className="w-full h-full object-cover" />
-        </div>
+        </div>,
+        document.body
       ))}
 
       {cartItemCount > 0 && (

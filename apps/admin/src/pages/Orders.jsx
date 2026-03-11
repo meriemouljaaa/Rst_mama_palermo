@@ -249,10 +249,23 @@ export default function Orders() {
                                                             {(order.payment_method || order.notes) && (
                                                                 <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60 flex gap-2 items-start">
                                                                     <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                                                                    <p className="text-[11px] text-amber-800 font-bold italic leading-snug">
-                                                                        {order.payment_method ? `Paiement : ${order.payment_method}` : order.notes}
-                                                                        {order.payment_method && order.notes && ` - ${order.notes}`}
-                                                                    </p>
+                                                                    <div className="flex flex-col gap-1 w-full">
+                                                                        <div className="flex justify-between items-center">
+                                                                            <p className="text-[11px] text-amber-800 font-black leading-snug">
+                                                                                {order.payment_method || 'Mode non spécifié'}
+                                                                            </p>
+                                                                            {order.payment_method === 'Online' && (
+                                                                                <span className={`text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded-md ${order.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                                                    {order.payment_status || 'Unpaid'}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        {order.notes && (
+                                                                            <p className="text-[10px] text-amber-900/70 font-bold italic border-t border-amber-200/50 pt-1">
+                                                                                {order.notes}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             )}
 
@@ -406,9 +419,22 @@ export default function Orders() {
                                         </div>
                                         <div className="space-y-2 pt-0.5 w-full">
                                             {selectedOrder.payment_method && (
-                                                <div className="flex items-center gap-2 w-full">
-                                                    <span className="text-[8px] font-black text-amber-900/50 uppercase tracking-widest bg-amber-100 px-1.5 py-0.5 rounded-md shrink-0">Mode</span>
-                                                    <span className="text-xs font-black text-amber-900 truncate">{selectedOrder.payment_method}</span>
+                                                <div className="flex flex-col gap-2 w-full">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[8px] font-black text-amber-900/50 uppercase tracking-widest bg-amber-100 px-1.5 py-0.5 rounded-md shrink-0">Mode</span>
+                                                            <span className="text-xs font-black text-amber-900">{selectedOrder.payment_method}</span>
+                                                        </div>
+                                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg ${selectedOrder.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+                                                            {selectedOrder.payment_status || 'Unpaid'}
+                                                        </span>
+                                                    </div>
+                                                    {selectedOrder.transaction_id && (
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded-md shrink-0">Trans. ID</span>
+                                                            <span className="text-[10px] font-medium text-gray-500 font-mono truncate">{selectedOrder.transaction_id}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {selectedOrder.notes && (

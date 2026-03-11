@@ -18,6 +18,19 @@ import sodaImg from "../assets/products/soda.jpg";
 import jusImg from "../assets/products/jus.jpg";
 import cafeImg from "../assets/products/cafe.jpg";
 
+// --- Utilities ---
+
+const formatPrice = (price) => {
+  if (price === undefined || price === null) return "";
+  let val = price;
+  if (typeof val === 'string') {
+    val = val.replace(" DH", "").trim().replace(",", ".");
+  }
+  const num = parseFloat(val);
+  if (isNaN(num)) return typeof price === 'string' ? price.replace(" DH", "") : price;
+  return num % 1 === 0 ? Math.round(num).toString() : num.toFixed(2);
+};
+
 // --- Optimized Light Components ---
 
 const ProductCard = memo(({ item, onAddToCart, onSelect }) => (
@@ -31,7 +44,7 @@ const ProductCard = memo(({ item, onAddToCart, onSelect }) => (
       </div>
       <div className="mt-1 sm:mt-0">
         <span className="text-xl sm:text-2xl font-bold text-[#C03434] block">
-          {item.price}
+          {formatPrice(item.price)} DH
         </span>
       </div>
     </div>
@@ -66,7 +79,7 @@ const MobileProductCard = memo(({ item, onAddToCart, onSelect }) => (
     <div className="flex flex-col flex-grow">
       <h4 className="text-[13px] font-bold text-gray-800 leading-[1.2] mb-1.5 line-clamp-2">{item.name}</h4>
       <span className="text-[#333] font-bold text-[14px] mt-auto">
-        {item.price.replace(" DH", "")}.00 DH
+        {formatPrice(item.price)} DH
       </span>
       <div className="flex gap-1.5 w-full mt-2">
         <button className="flex-1 py-1.5 border border-[#C03434] text-[#C03434] rounded-[8px] text-[12px] font-bold uppercase">Détails</button>
@@ -265,6 +278,23 @@ export default function Menu() {
     return () => window.removeEventListener('scroll', handleDesktopScroll);
   }, [isMobile, dynamicMenu, activeTabDesktop]);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    if (paymentStatus === 'success') {
+      setCheckoutSuccess(true);
+      setCart([]);
+      setIsCartOpen(true);
+      setIsCheckoutMode(true);
+      setTimeout(() => window.history.replaceState({}, document.title, window.location.pathname), 2000);
+    } else if (paymentStatus === 'error') {
+      alert("Le paiement a échoué. Veuillez réessayer.");
+      setIsCartOpen(true);
+      setIsCheckoutMode(true);
+      setTimeout(() => window.history.replaceState({}, document.title, window.location.pathname), 2000);
+    }
+  }, []);
+
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
     if (checkoutForm.phone.length !== 10) {
@@ -289,10 +319,36 @@ export default function Menu() {
         })
       });
       const customer = await cRes.json();
-      await fetch(`${API_BASE}/api/orders`, {
+      const orderRes = await fetch(`${API_BASE}/api/orders`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customer_id: customer.id, total_amount: cartTotal, notes: checkoutForm.notes, items: cart.map(i => ({ product_id: i.dbId || null, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(i.price.replace(" DH", "")), variant_name: i.variant_name })), payment_method: checkoutForm.payment_method })
       });
+      
+      const orderData = await orderRes.json();
+
+      if (checkoutForm.payment_method === 'Online') {
+        const payRes = await fetch(`${API_BASE}/api/payments/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: orderData.id,
+            amount: cartTotal,
+            customer: {
+              full_name: checkoutForm.full_name,
+              phone: checkoutForm.phone,
+              address: checkoutForm.address
+            }
+          })
+        });
+        const payData = await payRes.json();
+        if (payData.redirect_url) {
+          window.location.href = payData.redirect_url;
+          return;
+        } else {
+          throw new Error("Erreur de paiement");
+        }
+      }
+
       setCart([]); setCheckoutSuccess(true);
       setTimeout(() => {
         setIsCartOpen(false);
@@ -301,7 +357,7 @@ export default function Menu() {
         setCheckoutForm({ full_name: '', phone: '', address: '', notes: '', payment_method: 'Cash on Delivery' });
         setShowNotes(false);
       }, 3000);
-    } catch (err) { alert("Error"); } finally { setIsSubmitting(false); }
+    } catch (err) { alert("Une erreur est survenue."); } finally { setIsSubmitting(false); }
   };
 
   return (
@@ -381,7 +437,9 @@ export default function Menu() {
             <div className="h-64 md:h-auto md:w-1/2 overflow-hidden"><img src={selectedProduct.image || burgerImg} className="w-full h-full object-cover" /></div>
             <div className="p-8 flex flex-col md:w-1/2">
               <h3 className="text-3xl font-bold font-souvenir_std mb-2">{selectedProduct.name}</h3>
-              <span className="text-2xl font-bold text-[#C03434] mb-4 block">{selectedVariant ? `${selectedVariant.price} DH` : selectedProduct.price}</span>
+              <span className="text-2xl font-bold text-[#C03434] mb-4 block">
+                {formatPrice(selectedVariant ? selectedVariant.price : selectedProduct.price)} DH
+              </span>
               <p className="text-emerald-900/60 font-light mb-8">{selectedProduct.description || "Une expérience authentique italienne."}</p>
               {selectedProduct.variants?.length > 0 && (
                 <div className="mb-8">
@@ -494,7 +552,7 @@ export default function Menu() {
                             </button>
                           </div>
                           <div className="flex justify-between items-center mt-2">
-                            <span className="font-bold text-[#C03434]">{item.price}</span>
+                            <span className="font-bold text-[#C03434]">{formatPrice(item.price)} DH</span>
                             <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                               <button onClick={() => updateCartQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-emerald-900 transition-colors">-</button>
                               <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
@@ -511,10 +569,10 @@ export default function Menu() {
                   <div className="p-6 border-t bg-white relative z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
                     {isCheckoutMode ? (
                       <button type="submit" form="checkoutForm" disabled={isSubmitting} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg disabled:opacity-70 transition-all flex justify-center items-center">
-                        {isSubmitting ? <span className="animate-pulse">En cours...</span> : `Confirmer (${cartTotal.toFixed(2)} DH)`}
+                        {isSubmitting ? <span className="animate-pulse">En cours...</span> : `Confirmer (${formatPrice(cartTotal)} DH)`}
                       </button>
                     ) : (
-                      <button onClick={() => setIsCheckoutMode(true)} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Commander ({cartTotal.toFixed(2)} DH)</button>
+                      <button onClick={() => setIsCheckoutMode(true)} className="w-full bg-[#C03434] text-white py-4 rounded-xl font-bold uppercase shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Commander ({formatPrice(cartTotal)} DH)</button>
                     )}
                   </div>
                 )}

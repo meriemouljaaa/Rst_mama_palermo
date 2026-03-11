@@ -1,4 +1,5 @@
 import express from 'express';
+import axios from 'axios';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -437,6 +438,83 @@ app.put('/api/orders/:id/status', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// YouCan Pay Integration
+app.post('/api/payments/create', async (req, res) => {
+    const { order_id, amount, customer } = req.body;
+    
+    try {
+        const YOUCAN_PRIVATE_KEY = process.env.YOUCAN_PRIVATE_KEY || 'your_private_key_here';
+        const IS_SANDBOX = process.env.YOUCAN_SANDBOX !== 'false'; // Default to sandbox if not specified
+        
+        // Note: YouCan Pay API endpoint
+        const YOUCAN_API_URL = 'https://pay.youcan.shop/api/transaction/create';
+
+        const payload = {
+            pri_key: YOUCAN_PRIVATE_KEY,
+            amount: amount,
+            currency: 'MAD',
+            order_id: order_id.toString(),
+            success_url: `${req.headers.origin}/menu?payment=success&order_id=${order_id}`,
+            error_url: `${req.headers.origin}/menu?payment=error&order_id=${order_id}`,
+            customer_ip: req.ip,
+            metadata: {
+                customer_name: customer.full_name,
+                customer_phone: customer.phone
+            }
+        };
+
+        const response = await axios.post(YOUCAN_API_URL, payload);
+
+        if (response.data && response.data.transaction) {
+            // Store token/transaction in DB if needed
+            await pool.query(
+                'UPDATE orders SET transaction_id = $1 WHERE id = $2',
+                [response.data.transaction.id, order_id]
+            );
+
+            res.json({
+                token: response.data.transaction.id,
+                redirect_url: response.data.transaction.payment_url
+            });
+        } else {
+            console.error("YouCan Pay error:", response.data);
+            res.status(400).json({ error: 'Failed to create payment token', details: response.data });
+        }
+    } catch (err) {
+        console.error("Payment creation error:", err.response?.data || err.message);
+        res.status(500).json({ error: 'Internal server error during payment setup' });
+    }
+});
+
+app.post('/api/payments/webhook', async (req, res) => {
+    const { transaction_id, order_id, status } = req.body;
+    // status 1 usually means success in YouCan Pay IPN
+    try {
+        if (status == 1) {
+            await pool.query(
+                "UPDATE orders SET payment_status = 'Paid', status = 'Preparing' WHERE id = $1",
+                [order_id]
+            );
+            
+            // Fetch updated order for broadcast
+            const fullOrderRes = await pool.query(`
+                SELECT o.*, c.first_name, c.last_name, c.email, c.phone, c.address
+                FROM orders o JOIN customers c ON o.customer_id = c.id
+                WHERE o.id = $1
+            `, [order_id]);
+            
+            if (fullOrderRes.rows[0]) {
+                io.emit('newOrder', fullOrderRes.rows[0]);
+                io.emit('orderStatusChanged', { orderId: order_id, status: 'Preparing' });
+            }
+        }
+        res.json({ status: 'ok' });
+    } catch (err) {
+        console.error("Webhook error:", err);
+        res.status(500).send("Error");
     }
 });
 

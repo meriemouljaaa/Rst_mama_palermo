@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload, Tag, AlignLeft, Info, DollarSign, Filter, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload, Tag, AlignLeft, Info, DollarSign, Filter, ChevronDown, Search } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : 'http://localhost:5000/api/products';
 const CATEGORY_API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : 'http://localhost:5000/api/categories';
@@ -10,6 +10,7 @@ export default function Products() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -151,84 +152,77 @@ export default function Products() {
         return cat ? cat.name : 'Uncategorized';
     };
 
-    const filteredProducts = selectedCategory === 'all'
-        ? products
-        : products.filter(p => {
-            const productCatId = p.category_id?.toString();
-            if (productCatId === selectedCategory.toString()) return true;
+    const filteredProducts = products.filter(p => {
+        // 1. Search filter
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                             (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        if (!matchesSearch) return false;
 
-            // Also include products from subcategories of the selected parent category
-            const productCat = categories.find(c => c.id?.toString() === productCatId);
-            return productCat?.parent_id?.toString() === selectedCategory.toString();
-        });
+        // 2. Category filter
+        if (selectedCategory === 'all') return true;
+        
+        const productCatId = p.category_id?.toString();
+        if (productCatId === selectedCategory.toString()) return true;
+
+        // Also include products from subcategories
+        const productCat = categories.find(c => c.id?.toString() === productCatId);
+        return productCat?.parent_id?.toString() === selectedCategory.toString();
+    });
 
     useEffect(() => {
         console.log(`[Admin] Filtering by main category: ${selectedCategory}`);
     }, [selectedCategory]);
 
     return (
-        <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
-            <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-8">
+        <div className="h-full flex flex-col overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-30 bg-[#F8F9FA] pb-6 shrink-0">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col">
                         <h2 className="text-3xl font-black text-gray-900 tracking-tight">Products</h2>
-                        <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${products.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></span>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Inventory Live</span>
-                        </div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage your menu catalog</p>
                     </div>
 
-                    <div className="relative group cursor-pointer">
-                        <div className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl shadow-sm transition-all border-2
-                            ${selectedCategory === 'all'
-                                ? 'bg-white border-gray-100 hover:border-red-600/30'
-                                : 'bg-red-50 border-red-200 shadow-red-50 hover:bg-white'}`}>
-                            <Filter size={16} className={selectedCategory === 'all' ? 'text-gray-400' : 'text-red-600'} />
-                            <div className="flex flex-col text-left">
-                                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest leading-none mb-0.5">Main Category Filter</span>
-                                <div className="relative flex items-center">
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="appearance-none pr-8 text-sm font-black text-gray-900 bg-transparent outline-none cursor-pointer min-w-[160px]"
-                                    >
-                                        <option value="all">Full Menu</option>
-                                        {categories.filter(c => !c.parent_id).map(cat => (
-                                            <option key={cat.id} value={cat.id}>
-                                                {cat.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown size={14} className={`absolute right-0 pointer-events-none transition-colors
-                                        ${selectedCategory === 'all' ? 'text-gray-300' : 'text-red-600'}`} />
-                                </div>
-                            </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        {/* Search Bar */}
+                        <div className="relative w-full sm:w-64">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input 
+                                type="text"
+                                placeholder="Search products..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all shadow-sm"
+                            />
                         </div>
-                        {selectedCategory !== 'all' && (
-                            <button
-                                onClick={() => setSelectedCategory('all')}
-                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:scale-110 transition-transform animate-in zoom-in-50"
-                                title="Clear Filter"
+
+                        {/* Simple Category Selector */}
+                        <div className="relative w-full sm:w-48">
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all shadow-sm cursor-pointer"
                             >
-                                <X size={10} strokeWidth={4} />
-                            </button>
-                        )}
-                    </div>
-                </div>
+                                <option value="all">All Categories</option>
+                                {categories.filter(c => !c.parent_id).map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="text-right hidden sm:block mr-2">
-                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Catalog Size</p>
-                        <p className="text-sm font-black text-gray-900 leading-none">{filteredProducts.length} Items</p>
+                        <button
+                            onClick={() => handleOpenModal()}
+                            className="w-full sm:w-auto bg-red-600 hover:bg-black text-white px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 font-black shadow-lg shadow-red-100 transition-all hover:-translate-y-1 active:scale-95 text-xs uppercase tracking-widest"
+                        >
+                            <Plus size={18} strokeWidth={3} /> Add Product
+                        </button>
                     </div>
-                    <button
-                        onClick={() => handleOpenModal()}
-                        className="bg-red-600 hover:bg-black text-white px-6 py-3.5 rounded-2xl flex items-center gap-2 font-black shadow-xl shadow-red-100 transition-all hover:-translate-y-1 active:scale-95 text-sm uppercase tracking-wider"
-                    >
-                        <Plus size={20} strokeWidth={3} /> Add Product
-                    </button>
                 </div>
             </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-8">
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -500,6 +494,7 @@ export default function Products() {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 }

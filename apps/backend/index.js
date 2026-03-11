@@ -187,7 +187,9 @@ app.put('/api/products/:id', async (req, res) => {
         }
 
         await client.query('COMMIT');
-        res.json({ ...result.rows[0], variants: variants || [] });
+        const updatedProduct = { ...result.rows[0], variants: variants || [] };
+        io.emit('productUpdated', updatedProduct);
+        res.json(updatedProduct);
     } catch (err) {
         await client.query('ROLLBACK');
         console.error(err);

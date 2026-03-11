@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { io } from 'socket.io-client';
 
 // Image imports
 import pizzaImg from "../assets/products/pizza.jpg";
@@ -183,6 +184,12 @@ export default function Menu() {
       } catch (err) { console.error(err); }
     };
     fetchData();
+
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    socket.on('productUpdated', fetchData);
+    socket.on('newOrder', fetchData); // In case we want to refresh for other reasons
+
+    return () => socket.disconnect();
   }, [CATEGORY_STYLE_META]);
 
   // Progressive Hydration Logic

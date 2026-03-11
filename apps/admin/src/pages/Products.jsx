@@ -141,6 +141,29 @@ export default function Products() {
         }
     };
 
+    const toggleAvailability = async (product) => {
+        try {
+            const newStatus = !product.is_available;
+            const res = await fetch(`${API_URL}/${product.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...product,
+                    is_available: newStatus,
+                    category: product.category_id // Backend expects 'category' not 'category_id'
+                })
+            });
+
+            if (res.ok) {
+                setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_available: newStatus } : p));
+                setNotification({ message: `Product marked as ${newStatus ? 'available' : 'out of stock'}`, type: 'success' });
+                setTimeout(() => setNotification(null), 2000);
+            }
+        } catch (err) {
+            console.error('Failed to toggle availability', err);
+        }
+    };
+
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
@@ -281,9 +304,17 @@ export default function Products() {
                                     </td>
                                     <td className="p-4 font-bold text-gray-900">{Number(p.price).toFixed(2)} DH</td>
                                     <td className="p-4">
-                                        <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${p.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {p.is_available ? 'Available' : 'Out of stock'}
-                                        </span>
+                                        <button 
+                                            onClick={() => toggleAvailability(p)}
+                                            className="group flex items-center gap-2 outline-none"
+                                        >
+                                            <div className={`relative w-8 h-4 rounded-full transition-colors duration-200 ${p.is_available ? 'bg-green-500' : 'bg-gray-200'}`}>
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-200 shadow-sm ${p.is_available ? 'translate-x-4' : ''}`} />
+                                            </div>
+                                            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${p.is_available ? 'text-green-600' : 'text-gray-400'}`}>
+                                                {p.is_available ? 'Available' : 'Sold Out'}
+                                            </span>
+                                        </button>
                                     </td>
                                     <td className="p-4 flex items-center justify-end gap-2">
                                         <button onClick={() => handleOpenModal(p)} className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
@@ -482,16 +513,6 @@ export default function Products() {
                                         </div>
                                     </div>
 
-                                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-black text-gray-900">Availability</span>
-                                            <span className="text-[10px] text-gray-500 font-bold italic">Instantly hide from storefront</span>
-                                        </div>
-                                        <div className="relative flex items-center">
-                                            <input type="checkbox" checked={formData.is_available} onChange={e => setFormData({ ...formData, is_available: e.target.checked })} className="peer sr-only" />
-                                            <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 

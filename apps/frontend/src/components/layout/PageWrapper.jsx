@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { motion } from 'framer-motion';
 import logoImg from "../../assets/logo-loading.png";
 
@@ -9,6 +9,10 @@ const PageWrapper = ({ children }) => {
 
     useEffect(() => {
         isFirstLoad = false;
+    }, []);
+
+    useLayoutEffect(() => {
+        window.scrollTo(0, 0);
     }, []);
 
     return (

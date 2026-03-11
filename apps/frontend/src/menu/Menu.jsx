@@ -113,14 +113,14 @@ export default function Menu() {
   const [hydratedCategories, setHydratedCategories] = useState(new Set());
 
   const CATEGORY_STYLE_META = useMemo(() => ({
-    "pizzas": { banner: pizzaImg, title: "Nos Pizzas", subtitle: "Artisanales & Cuites au feu de bois" },
-    "pastas": { banner: pastaImg, title: "Pasta Fresca", subtitle: "Pâtes fraîches faites maison" },
-    "desserts": { banner: dolceImg, title: "Dolce Vita", subtitle: "Les douceurs pour finir en beauté" },
-    "boissons": { banner: sodaImg, title: "Rafraîchissements", subtitle: "Boissons fraîches & jus naturels" },
-    "plats": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal" },
-    "viande & poulet": { banner: platPouletImg, title: "Gastronomie", subtitle: "L'excellence en plat principal" },
-    "burgers & sandwiches": { banner: burgerImg, title: "Gourmet Burgers", subtitle: "Pain brioché & sandwichs italiens" },
-    "salades": { banner: saladesImg, title: "Insalate", subtitle: "Fraîcheur & saveurs méditerranéennes" }
+    "pizzas": { banner: pizzaImg, subtitle: "Artisanales & Cuites au feu de bois" },
+    "pastas": { banner: pastaImg, subtitle: "Pâtes fraîches faites maison" },
+    "desserts": { banner: dolceImg, subtitle: "Les douceurs pour finir en beauté" },
+    "boissons": { banner: sodaImg, subtitle: "Boissons fraîches & jus naturels" },
+    "plats": { banner: platPouletImg, subtitle: "L'excellence en plat principal" },
+    "viande & poulet": { banner: platPouletImg, subtitle: "L'excellence en plat principal" },
+    "burgers & sandwiches": { banner: burgerImg, subtitle: "Pain brioché & sandwichs italiens" },
+    "salades": { banner: saladesImg, subtitle: "Fraîcheur & saveurs méditerranéennes" }
   }), []);
 
   const getImageUrl = (url) => {
@@ -152,7 +152,7 @@ export default function Menu() {
         products.forEach(p => mapping[p.name.replace(/^\d+\.\s*/, '').toLowerCase().trim()] = p.id);
         setProductMapping(mapping);
 
-        const rootCategories = categories.filter(c => !c.parent_id);
+        const rootCategories = categories.filter(c => c.parent_id === null || c.parent_id === undefined);
         const dynamicStructure = rootCategories.map(root => {
           const subIds = categories.filter(c => c.id === root.id || c.parent_id === root.id).map(c => c.id);
           const items = products.filter(p => p.is_available && subIds.includes(p.category_id)).map(p => ({
@@ -164,8 +164,14 @@ export default function Menu() {
             variants: p.variants || []
           }));
           if (items.length === 0) return null;
-          const style = CATEGORY_STYLE_META[root.name.toLowerCase()] || { banner: getImageUrl(root.image_url) || burgerImg, title: root.name, subtitle: root.description };
-          return { id: `cat-${root.id}`, title: style.title, subtitle: style.subtitle, bannerImage: style.banner, items };
+          const meta = CATEGORY_STYLE_META[root.name.toLowerCase()] || {};
+          return { 
+            id: `cat-${root.id}`, 
+            title: root.name, 
+            subtitle: meta.subtitle || root.description, 
+            bannerImage: meta.banner || getImageUrl(root.image_url) || burgerImg, 
+            items 
+          };
         }).filter(Boolean);
 
         if (dynamicStructure.length > 0) {
@@ -393,7 +399,7 @@ export default function Menu() {
                 <div className={`w-12 h-12 rounded-full overflow-hidden transition-transform ${activeTabMobile === cat.id ? 'scale-110 shadow-lg ring-2 ring-[#C03434]' : 'grayscale-[30%]'}`}>
                   <img src={cat.bannerImage} alt="" className="w-full h-full object-cover" />
                 </div>
-                <span className={`text-[10px] uppercase tracking-wider text-center ${activeTabMobile === cat.id ? 'font-bold text-[#C03434]' : 'font-semibold text-gray-400'}`}>{cat.title.split(' ').pop()}</span>
+                <span className={`text-[10px] uppercase tracking-wider text-center ${activeTabMobile === cat.id ? 'font-bold text-[#C03434]' : 'font-semibold text-gray-400'}`}>{cat.title}</span>
               </button>
             ))}
           </div>

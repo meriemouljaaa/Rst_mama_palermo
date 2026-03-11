@@ -231,11 +231,11 @@ app.get('/api/categories', async (req, res) => {
 });
 
 app.post('/api/categories', async (req, res) => {
-    const { name, description, parent_id, image_url } = req.body;
+    const { name, description, parent_id, image_url, is_featured } = req.body;
     try {
         const result = await pool.query(
-            'INSERT INTO categories (name, description, parent_id, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
-            [name, description, parent_id || null, image_url || null]
+            'INSERT INTO categories (name, description, parent_id, image_url, is_featured) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name, description, parent_id || null, image_url || null, !!is_featured]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -246,15 +246,15 @@ app.post('/api/categories', async (req, res) => {
 
 app.put('/api/categories/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description, parent_id, image_url } = req.body;
+    const { name, description, parent_id, image_url, is_featured } = req.body;
     try {
         // Fetch current category to find the old image
         const oldCatRes = await pool.query('SELECT image_url FROM categories WHERE id = $1', [id]);
         const oldImageUrl = oldCatRes.rows[0]?.image_url;
 
         const result = await pool.query(
-            'UPDATE categories SET name = $1, description = $2, parent_id = $3, image_url = $4 WHERE id = $5 RETURNING *',
-            [name, description, parent_id || null, image_url || null, id]
+            'UPDATE categories SET name = $1, description = $2, parent_id = $3, image_url = $4, is_featured = $5 WHERE id = $6 RETURNING *',
+            [name, description, parent_id || null, image_url || null, !!is_featured, id]
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Category not found' });
 

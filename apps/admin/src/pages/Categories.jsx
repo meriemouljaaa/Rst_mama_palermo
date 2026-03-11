@@ -29,17 +29,19 @@ export default function Categories() {
     const [editingCategory, setEditingCategory] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState(null);
+    const [notification, setNotification] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         parent_id: null,
-        image_url: ''
+        image_url: '',
+        is_featured: false
     });
 
-    const fetchData = async () => {
+    const fetchData = async (silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
             const [catRes, prodRes] = await Promise.all([
                 fetch(API_URL),
                 fetch(PRODUCTS_API)
@@ -66,7 +68,8 @@ export default function Categories() {
                 name: category.name,
                 description: category.description || '',
                 parent_id: category.parent_id,
-                image_url: category.image_url || ''
+                image_url: category.image_url || '',
+                is_featured: !!category.is_featured
             });
         } else {
             setEditingCategory(null);
@@ -74,7 +77,8 @@ export default function Categories() {
                 name: '',
                 description: '',
                 parent_id: parentId,
-                image_url: ''
+                image_url: '',
+                is_featured: false
             });
         }
         setSelectedFile(null);
@@ -114,12 +118,16 @@ export default function Categories() {
             await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, image_url: finalImageUrl })
+                body: JSON.stringify({ ...formData, image_url: finalImageUrl, is_featured: !!formData.is_featured })
             });
-            fetchData();
+            fetchData(true);
             handleCloseModal();
+            setNotification({ message: `Category ${editingCategory ? 'updated' : 'initialized'} successfully!`, type: 'success' });
+            setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error('Failed to save category', err);
+            setNotification({ message: 'Failed to save category.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
@@ -137,10 +145,14 @@ export default function Categories() {
                     const data = await res.json();
                     alert(`Action blocked: ${data.error || 'Ensure no products are linked.'}`);
                 } else {
-                    fetchData();
+                    fetchData(true);
+                    setNotification({ message: 'Category deleted successfully!', type: 'success' });
+                    setTimeout(() => setNotification(null), 3000);
                 }
             } catch (err) {
                 console.error('Failed to delete category', err);
+                setNotification({ message: 'Failed to delete category.', type: 'error' });
+                setTimeout(() => setNotification(null), 3000);
             }
         }
     };
@@ -167,22 +179,28 @@ export default function Categories() {
 
     return (
         <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-6">
-            {/* Page Header - Compact */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2 text-red-600 mb-1">
-                        <Layers size={14} strokeWidth={3} />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Hierarchy</span>
+            {/* Notifications */}
+            {notification && (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
+                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
+                }`}>
+                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Info size={14} />
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Structured Menu</h2>
+                    {notification.message}
                 </div>
+            )}
+
+            {/* Page Header - Simple */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Categories</h2>
 
                 <div className="flex items-center gap-2">
                     <div className="relative group">
                         <Search className="absolute left-3 top-2.5 text-gray-400 group-focus-within:text-red-500 transition-colors" size={16} />
                         <input
                             type="text"
-                            placeholder="Search hierarchy..."
+                            placeholder="Search categories..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl w-full md:w-64 outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all shadow-sm font-medium text-sm"
@@ -190,43 +208,13 @@ export default function Categories() {
                     </div>
                     <button
                         onClick={() => handleOpenModal()}
-                        className="bg-red-600 hover:bg-black text-white px-4 py-2 rounded-xl flex items-center gap-2 font-black shadow-sm transition-all text-xs uppercase tracking-wide"
+                        className="bg-red-600 hover:bg-black text-white px-4 py-2 rounded-xl flex items-center gap-2 font-black shadow-lg shadow-red-100 transition-all text-xs uppercase tracking-widest"
                     >
-                        <Plus size={16} strokeWidth={3} /> Add Parent
+                        <Plus size={16} strokeWidth={3} /> Add Category
                     </button>
                 </div>
             </div>
 
-            {/* Metrics Dashboard - Compact */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Parent Groups</p>
-                        <h4 className="text-xl font-black text-gray-900">{parentCategories.length} Categories</h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
-                        <LayoutGrid size={20} />
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Sub-Sections</p>
-                        <h4 className="text-xl font-black text-gray-900">{categories.length - parentCategories.length} Subcategories</h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <Layers size={20} />
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Categorization</p>
-                        <h4 className="text-xl font-black text-green-600">{categorizationRate}% Items</h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                        <CheckCircle2 size={20} />
-                    </div>
-                </div>
-            </div>
 
             {/* Categories Architecture - Compact Grid */}
             {isLoading ? (
@@ -244,15 +232,23 @@ export default function Categories() {
                                 {/* Parent Banner - Streamlined */}
                                 <div className="p-5 pb-4 border-b border-gray-50 flex justify-between items-start bg-gray-50/20">
                                     <div className="flex gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-100 overflow-hidden">
+                                        <div className="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-100 overflow-hidden relative">
                                             {parent.image_url ? (
                                                 <img src={parent.image_url} alt={parent.name} className="w-full h-full object-cover" />
                                             ) : (
                                                 <LayoutGrid size={24} />
                                             )}
+                                            {parent.is_featured && (
+                                                <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                            )}
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-black text-gray-900 leading-none mb-1.5">{parent.name}</h3>
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <h3 className="text-lg font-black text-gray-900 leading-none">{parent.name}</h3>
+                                                {parent.is_featured && (
+                                                    <span className="text-[8px] font-black bg-green-100 text-green-600 px-1.5 py-0.5 rounded-md uppercase tracking-widest">Featured</span>
+                                                )}
+                                            </div>
                                             <p className="text-[11px] text-gray-400 font-medium italic line-clamp-1">{parent.description || 'Core menu section.'}</p>
                                         </div>
                                     </div>
@@ -268,17 +264,6 @@ export default function Categories() {
 
                                 {/* Content: Subcategories & Stats - Tighter */}
                                 <div className="p-5 flex-1 space-y-6">
-                                    {/* Stats Row */}
-                                    <div className="flex gap-3">
-                                        <div className="flex-1 bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100 flex items-center justify-between">
-                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Subs</p>
-                                            <span className="text-sm font-black text-gray-900">{subs.length}</span>
-                                        </div>
-                                        <div className="flex-1 bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100 flex items-center justify-between">
-                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Items</p>
-                                            <span className="text-sm font-black text-gray-900">{totalProducts}</span>
-                                        </div>
-                                    </div>
 
                                     {/* Subcategories List */}
                                     <div className="space-y-2">
@@ -389,6 +374,19 @@ export default function Categories() {
                                             ))}
                                         </select>
                                     </div>
+
+                                    {!formData.parent_id && (
+                                        <div className="flex items-center gap-2 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, is_featured: !formData.is_featured })}
+                                                className={`w-10 h-5 rounded-full relative transition-colors ${formData.is_featured ? 'bg-green-500' : 'bg-gray-200'}`}
+                                            >
+                                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform ${formData.is_featured ? 'left-6' : 'left-1'}`} />
+                                            </button>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Show on Home Page</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="col-span-4">

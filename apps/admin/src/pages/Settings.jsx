@@ -1,11 +1,28 @@
 import { useState } from 'react';
-import { Store, Clock, Users, Building, Mail, Phone, MapPin, Save, Shield } from 'lucide-react';
+import { Store, Clock, Users, Building, Mail, Phone, MapPin, Save, Shield, Info } from 'lucide-react';
 
 export default function Settings() {
     const [activeTab, setActiveTab] = useState('general');
+    const [notification, setNotification] = useState(null);
+
+    const handleSave = () => {
+        setNotification({ message: 'Settings saved successfully!', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+    };
 
     return (
-        <div className="max-w-5xl">
+        <div className="max-w-5xl relative">
+            {/* Notifications */}
+            {notification && (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
+                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
+                }`}>
+                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Info size={14} />
+                    </div>
+                    {notification.message}
+                </div>
+            )}
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-gray-900">Settings</h2>
             </div>
@@ -89,7 +106,11 @@ export default function Settings() {
                                 </div>
 
                                 <div className="pt-6 border-t border-gray-100 flex justify-end">
-                                    <button type="button" className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors">
+                                    <button 
+                                        type="button" 
+                                        onClick={handleSave}
+                                        className="bg-red-600 hover:bg-black text-white px-6 py-2.5 rounded-xl flex items-center gap-2 font-black shadow-lg shadow-red-100 transition-all hover:-translate-y-1 active:scale-95 text-xs uppercase tracking-widest"
+                                    >
                                         <Save size={18} /> Save Details
                                     </button>
                                 </div>

@@ -28,10 +28,11 @@ export default function Orders() {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [revealedPhones, setRevealedPhones] = useState({});
     const [expandedOrders, setExpandedOrders] = useState({});
+    const [notification, setNotification] = useState(null);
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
             const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             const res = await fetch(`${API_BASE}/api/orders`);
             const data = await res.json();
@@ -47,8 +48,8 @@ export default function Orders() {
         fetchOrders();
 
         const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
-        socket.on('orderStatusChanged', () => fetchOrders());
-        socket.on('newOrder', () => fetchOrders());
+        socket.on('orderStatusChanged', () => fetchOrders(true));
+        socket.on('newOrder', () => fetchOrders(true));
 
         return () => socket.disconnect();
     }, []);
@@ -61,8 +62,12 @@ export default function Orders() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
             });
+            setNotification({ message: `Order #${id} status updated to ${status}!`, type: 'success' });
+            setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error('Failed to update status', err);
+            setNotification({ message: 'Failed to update order status.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
@@ -96,6 +101,18 @@ export default function Orders() {
 
     return (
         <div className="h-full flex flex-col space-y-4 overflow-hidden">
+            {/* Notifications */}
+            {notification && (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
+                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
+                }`}>
+                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Info size={14} />
+                    </div>
+                    {notification.message}
+                </div>
+            )}
+
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 shrink-0">
                 <div>

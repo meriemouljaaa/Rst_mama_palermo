@@ -1,10 +1,62 @@
-import React, { useRef } from 'react';
-import { productsData } from '../../data/productsData';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
+// Image imports (Sync with Menu.jsx)
+import pizzaImg from "../../assets/products/pizza.jpg";
+import pastaImg from "../../assets/products/pasta.jpg";
+import burgerImg from "../../assets/products/burger.jpg";
+import platPouletImg from "../../assets/products/plat_poulet.jpg";
+import saladesImg from "../../assets/products/salades.jpg";
+import dolceImg from "../../assets/products/dolce.jpg";
+import sodaImg from "../../assets/products/soda.jpg";
+
 export function ProductsSection() {
+  const [categories, setCategories] = useState([]);
   const scrollContainerRef = useRef(null);
+
+  const CATEGORY_IMAGE_MAPPING = useMemo(() => ({
+    "pizzas": pizzaImg,
+    "pastas": pastaImg,
+    "desserts": dolceImg,
+    "boissons": sodaImg,
+    "plats": platPouletImg,
+    "viande & poulet": platPouletImg,
+    "burgers & sandwiches": burgerImg,
+    "salades": saladesImg
+  }), []);
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.includes('localhost:3001')) {
+      return url.replace('localhost:3001', 'localhost:5000');
+    }
+    return url;
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await fetch(`${API_BASE}/api/categories`);
+        const data = await res.json();
+        
+        // Filter for parent categories that are marked as featured
+        const featured = data.filter(c => (c.parent_id === null || c.parent_id === undefined) && c.is_featured);
+        
+        const structuredCategories = featured.map(cat => ({
+          id: cat.id,
+          title: cat.name,
+          image: CATEGORY_IMAGE_MAPPING[cat.name.toLowerCase()] || getImageUrl(cat.image_url) || burgerImg
+        }));
+
+        setCategories(structuredCategories);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, [CATEGORY_IMAGE_MAPPING]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -52,36 +104,42 @@ export function ProductsSection() {
               msOverflowStyle: 'none'
             }}
           >
-            {productsData.map((product) => (
-              <figure
-                key={product.id}
-                className="group relative flex-shrink-0 w-[290px] md:w-[380px] mr-6 bg-white rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 snap-center hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-gradient-to-br border-stone-100"
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                to="/menu"
+                className="group relative flex-shrink-0 w-[290px] md:w-[380px] mr-6 bg-white rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 snap-center hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-stone-100 block"
               >
                 <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
                   <div className="absolute inset-0 bg-emerald-950/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
                   <img
-                    alt={product.alt}
-                    src={product.image}
-                    className={`${product.imageClass || 'w-full h-full object-cover'} group-hover:scale-110 transition-transform duration-700`}
+                    alt={cat.title}
+                    src={cat.image}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 </div>
 
                 <figcaption className="p-8 relative">
                   <div className="flex justify-between items-center bg-white">
-                    <a
-                      href={product.href}
-                      title={product.title}
+                    <span
                       className="text-2xl font-bold text-gray-900 group-hover:text-emerald-900 transition-colors duration-300 font-souvenir"
                     >
-                      {product.title}
-                    </a>
+                      {cat.title}
+                    </span>
                     <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-white transition-all duration-300 shrink-0">
                       <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>
                 </figcaption>
-              </figure>
+              </Link>
             ))}
+            {categories.length === 0 && (
+              <div className="flex gap-6 w-full h-40">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex-shrink-0 w-[290px] md:w-[380px] bg-stone-100 rounded-3xl animate-pulse" />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Boutons de scroll floatants */}

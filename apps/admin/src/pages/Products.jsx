@@ -11,6 +11,7 @@ export default function Products() {
     const [editingProduct, setEditingProduct] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [notification, setNotification] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -131,8 +132,12 @@ export default function Products() {
             });
             fetchData();
             handleCloseModal();
+            setNotification({ message: `Product ${editingProduct ? 'updated' : 'created'} successfully!`, type: 'success' });
+            setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error('Failed to save product', err);
+            setNotification({ message: 'Failed to save product.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
@@ -141,8 +146,12 @@ export default function Products() {
             try {
                 await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
                 fetchData();
+                setNotification({ message: 'Product deleted successfully!', type: 'success' });
+                setTimeout(() => setNotification(null), 3000);
             } catch (err) {
                 console.error('Failed to delete product', err);
+                setNotification({ message: 'Failed to delete product.', type: 'error' });
+                setTimeout(() => setNotification(null), 3000);
             }
         }
     };
@@ -176,6 +185,18 @@ export default function Products() {
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
+            {/* Notifications */}
+            {notification && (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
+                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
+                }`}>
+                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Info size={14} />
+                    </div>
+                    {notification.message}
+                </div>
+            )}
+
             {/* Sticky Header */}
             <div className="sticky top-0 z-30 bg-[#F8F9FA] pb-6 shrink-0">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

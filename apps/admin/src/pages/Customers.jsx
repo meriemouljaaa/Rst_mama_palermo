@@ -8,9 +8,9 @@ export default function Customers() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchCustomers = async () => {
+    const fetchCustomers = async (silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
             const res = await fetch(API_URL);
             const data = await res.json();
             setCustomers(data);

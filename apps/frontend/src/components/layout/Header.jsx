@@ -79,19 +79,24 @@ export function Header({ scrollToSection, refs }) {
         {/* Navigation Bureau */}
         <div className="hidden md:flex items-center ml-auto gap-8 lg:gap-12">
           <ul className="flex items-center list-none p-0 gap-6 lg:gap-10">
-            {navigationData.mainNavigation.map((item) => (
-              <li key={item.id} className="relative group">
-                <button
-                  onClick={() => handleClick(item)}
-                  className={`relative py-2 text-sm lg:text-base font-bold uppercase tracking-widest transition-all duration-300 font-forma_djr_display ${isScrolled ? "text-emerald-900" : "text-white"
-                    }`}
-                >
-                  {item.label}
-                  <span className={`absolute bottom-0 left-0 w-0 h-[2px] transition-all duration-300 group-hover:w-full ${isScrolled ? "bg-emerald-900" : "bg-red-500"
-                    }`}></span>
-                </button>
-              </li>
-            ))}
+            {navigationData.mainNavigation.map((item) => {
+              const displayItem = location.pathname === "/menu" && item.id === "menu"
+                ? { ...item, label: "Home", href: "/" }
+                : item;
+              return (
+                <li key={item.id} className="relative group">
+                  <button
+                    onClick={() => handleClick(displayItem)}
+                    className={`relative py-2 text-sm lg:text-base font-bold uppercase tracking-widest transition-all duration-300 font-forma_djr_display ${isScrolled ? "text-emerald-900" : "text-white"
+                      }`}
+                  >
+                    {displayItem.label}
+                    <span className={`absolute bottom-0 left-0 w-0 h-[2px] transition-all duration-300 group-hover:w-full ${isScrolled ? "bg-emerald-900" : "bg-red-500"
+                      }`}></span>
+                  </button>
+                </li>
+              );
+            })}
             <li className="relative group">
               <Link
                 to="/contact"
@@ -117,20 +122,25 @@ export function Header({ scrollToSection, refs }) {
           </div>
 
           <ul className="list-none p-0 flex flex-col gap-10 relative z-10 w-full">
-            {navigationData.mainNavigation.map((item, index) => (
-              <li
-                key={item.id}
-                className={`transition-all duration-700 transform ${isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                <button
-                  onClick={() => handleClick(item)}
-                  className="text-4xl sm:text-5xl font-black text-white uppercase tracking-tighter hover:text-red-500 transition-colors"
+            {navigationData.mainNavigation.map((item, index) => {
+              const displayItem = location.pathname === "/menu" && item.id === "menu"
+                ? { ...item, label: "Home", href: "/" }
+                : item;
+              return (
+                <li
+                  key={item.id}
+                  className={`transition-all duration-700 transform ${isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
                 >
-                  {item.label}
-                </button>
-              </li>
-            ))}
+                  <button
+                    onClick={() => handleClick(displayItem)}
+                    className="text-4xl sm:text-5xl font-black text-white uppercase tracking-tighter hover:text-red-500 transition-colors"
+                  >
+                    {displayItem.label}
+                  </button>
+                </li>
+              );
+            })}
             <li className={`mt-10 transition-all duration-700 delay-200 transform ${isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
               <Link
                 to="/contact"

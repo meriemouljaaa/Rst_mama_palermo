@@ -529,7 +529,7 @@ export default function Products() {
                                     type="submit"
                                     className="px-6 py-3 bg-red-600 hover:bg-black text-white font-black rounded-xl transition-all shadow-lg shadow-red-100 hover:shadow-black/10 hover:-translate-y-0.5 active:translate-y-0 text-[10px] tracking-widest uppercase"
                                 >
-                                    {editingProduct ? 'Commit Updates' : 'Publish Product'}
+                                    {editingProduct ? 'Save Updates' : 'Publish Product'}
                                 </button>
                             </div>
                         </form>

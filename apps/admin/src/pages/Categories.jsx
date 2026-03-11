@@ -436,7 +436,7 @@ export default function Categories() {
                                     type="submit"
                                     className="px-6 py-2.5 bg-red-600 hover:bg-black text-white font-black rounded-xl transition-all shadow-lg shadow-red-100 hover:shadow-black/10 hover:-translate-y-0.5 active:translate-y-0 text-[10px] tracking-widest uppercase"
                                 >
-                                    {editingCategory ? 'Commit' : 'Initialize'}
+                                    {editingCategory ? 'Save' : 'Initialize'}
                                 </button>
                             </div>
                         </form>

@@ -228,6 +228,14 @@ export default function Menu() {
     setSelectedProduct(null);
   };
 
+  const handleQuickAdd = (product, qty, e) => {
+    if (product.variants?.length > 0) {
+      setSelectedProduct(product);
+    } else {
+      addToCart(product, qty, e);
+    }
+  };
+
   const updateCartQuantity = (id, delta) => setCart(prev => prev.map(item => item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item).filter(i => i.quantity > 0));
   const cartTotal = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace(" DH", "")) * item.quantity), 0);
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -294,6 +302,19 @@ export default function Menu() {
       setTimeout(() => window.history.replaceState({}, document.title, window.location.pathname), 2000);
     }
   }, []);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setQuantity(1);
+      if (selectedProduct.variants?.length > 0) {
+        setSelectedVariant(selectedProduct.variants[0]);
+      } else {
+        setSelectedVariant(null);
+      }
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [selectedProduct]);
 
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
@@ -383,7 +404,7 @@ export default function Menu() {
                   <h3 className="font-bold text-[17px] mb-3 text-gray-800 ml-1">{cat.title}</h3>
                   {hydratedCategories.has(cat.id) ? (
                     <div className="grid grid-cols-2 gap-2.5">
-                      {cat.items.map(item => <MobileProductCard key={item.id} item={item} onAddToCart={addToCart} onSelect={setSelectedProduct} />)}
+                      {cat.items.map(item => <MobileProductCard key={item.id} item={item} onAddToCart={handleQuickAdd} onSelect={setSelectedProduct} />)}
                     </div>
                   ) : <div className="h-40 bg-white/50 rounded-2xl animate-pulse" />}
                 </div>
@@ -421,7 +442,7 @@ export default function Menu() {
               </div>
               {hydratedCategories.has(cat.id) ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {cat.items.map(item => <ProductCard key={item.id} item={item} onAddToCart={addToCart} onSelect={setSelectedProduct} />)}
+                  {cat.items.map(item => <ProductCard key={item.id} item={item} onAddToCart={handleQuickAdd} onSelect={setSelectedProduct} />)}
                 </div>
               ) : <div className="h-60 bg-emerald-50 rounded-[2rem] animate-pulse" />}
             </section>

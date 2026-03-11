@@ -108,7 +108,7 @@ export function Header({ scrollToSection, refs }) {
 
         {/* Navigation Mobile Overlay */}
         <div
-          className={`fixed inset-0 bg-emerald-950 transition-all duration-700 ease-in-out md:hidden flex flex-col items-center justify-center px-8 text-center ${isMenuOpen ? "clip-path-open opacity-100" : "clip-path-closed opacity-0 pointer-events-none"
+          className={`fixed inset-0 bg-emerald-950 transition-all duration-400 ease-in-out md:hidden flex flex-col items-center justify-center px-8 text-center ${isMenuOpen ? "clip-path-open opacity-100" : "clip-path-closed opacity-0 pointer-events-none"
             }`}
         >
           {/* Decorative background logo */}

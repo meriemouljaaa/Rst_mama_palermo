@@ -190,7 +190,7 @@ export default function Menu() {
         dynamicMenu.forEach(c => next.add(c.id));
         return next;
       });
-    }, 800);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [dynamicMenu]);
@@ -475,7 +475,7 @@ export default function Menu() {
                 initial={{ x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                transition={{ type: "spring", damping: 30, stiffness: 350, mass: 0.8 }}
                 className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col"
               >
                 <div className="flex items-center justify-between p-5 border-b"><h2 className="text-2xl font-bold font-souvenir_std">{isCheckoutMode ? (checkoutSuccess ? "Bravo!" : "Livraison") : "Panier"}</h2><button onClick={() => { setIsCartOpen(false); setIsCheckoutMode(false); setCheckoutSuccess(false); }}>✕</button></div>

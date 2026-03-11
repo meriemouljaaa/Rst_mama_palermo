@@ -23,7 +23,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
     ];
 
     return (
-        <aside className={`${isCollapsed ? 'w-20' : 'w-72'} bg-white shadow-xl flex flex-col h-full border-r border-gray-100 transition-all duration-300 ease-in-out relative group`}>
+        <aside className={`${isCollapsed ? 'w-20' : 'w-72'} bg-white shadow-xl flex flex-col h-full border-r border-gray-100 transition-all duration-200 ease-in-out relative group`}>
             {/* Collapse Toggle Button */}
             <button
                 onClick={onToggle}

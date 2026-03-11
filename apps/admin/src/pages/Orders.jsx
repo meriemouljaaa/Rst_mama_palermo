@@ -113,12 +113,10 @@ export default function Orders() {
                 </div>
             )}
 
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 shrink-0">
-                <div>
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Active Orders</h2>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">Real-time fulfillment tracking.</p>
-                </div>
+            {/* Page Header - Simple */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Orders</h2>
+
                 <div className="flex items-center gap-2">
                     <div className="relative group">
                         <Search className="absolute left-3 top-2.5 text-gray-400 group-focus-within:text-red-500 transition-colors" size={16} />
@@ -129,37 +127,6 @@ export default function Orders() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl w-full md:w-64 outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all shadow-sm font-medium text-sm"
                         />
-                    </div>
-                </div>
-            </div>
-
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active Status</p>
-                        <h4 className="text-xl font-black text-gray-900">{orders.filter(o => o.status !== 'Delivered').length} Units</h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
-                        <Package size={20} />
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Today's Flow</p>
-                        <h4 className="text-xl font-black text-gray-900">{stats.today} Orders</h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <Calendar size={20} />
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Turnover</p>
-                        <h4 className="text-xl font-black text-gray-900">{stats.revenue} <span className="text-xs">DH</span></h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                        <p className="font-black text-xs">DH</p>
                     </div>
                 </div>
             </div>

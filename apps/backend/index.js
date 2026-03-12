@@ -306,20 +306,16 @@ app.get('/api/customers', async (req, res) => {
 });
 
 app.post('/api/customers', async (req, res) => {
-    let { first_name, last_name, email, phone, address } = req.body;
+    const { first_name, last_name, email, phone, address } = req.body;
     try {
-        if (!email || email.trim() === '') {
-            email = `guest_${Date.now()}_${Math.floor(Math.random() * 10000)}@guest.local`;
-        }
-
         const result = await pool.query(
             `INSERT INTO customers (first_name, last_name, email, phone, address) 
              VALUES ($1, $2, $3, $4, $5) 
-             ON CONFLICT (email) 
+             ON CONFLICT (phone) 
              DO UPDATE SET 
                first_name = EXCLUDED.first_name, 
                last_name = EXCLUDED.last_name, 
-               phone = EXCLUDED.phone, 
+               email = EXCLUDED.email,
                address = EXCLUDED.address
              RETURNING *`,
             [first_name, last_name, email, phone, address]

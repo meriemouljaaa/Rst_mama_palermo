@@ -14,14 +14,24 @@ export function Header({ scrollToSection, refs }) {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       setIsScrolled(scrollTop > 100); // Changer après 100px de scroll
     };
 
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   // Fonction pour gérer scroll ou navigation vers la page principale
@@ -37,7 +47,9 @@ export function Header({ scrollToSection, refs }) {
     }
   };
 
-  const isSolid = isScrolled || location.pathname !== '/';
+  // On desktop, it's solid only when scrolled.
+  // On mobile, it's solid when scrolled OR when on a page other than home.
+  const isSolid = isScrolled || (isMobile && location.pathname !== '/');
 
   return (
     <header

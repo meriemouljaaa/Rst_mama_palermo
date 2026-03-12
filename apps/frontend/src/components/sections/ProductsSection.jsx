@@ -55,20 +55,6 @@ export function ProductsSection() {
     fetchCategories();
   }, [CATEGORY_IMAGE_MAPPING]);
 
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      const cardWidth = window.innerWidth >= 768 ? 420 : 310;
-      scrollContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      const cardWidth = window.innerWidth >= 768 ? 420 : 310;
-      scrollContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
-    }
-  };
-
   return (
     <div className="relative bg-stone-50 overflow-hidden py-[60px] md:py-[100px]">
       {/* Decorative Background Elements */}
@@ -92,20 +78,15 @@ export function ProductsSection() {
       <div className="relative z-10 box-border max-w-full w-full">
         <div className="box-border max-w-[1660px] w-full mx-auto px-5 md:max-w-[1680px] md:px-[30px] relative">
 
-          {/* Produits */}
+          {/* Produits Grid */}
           <div
-            ref={scrollContainerRef}
-            className="flex w-full overflow-x-auto pb-12 pt-4 snap-x snap-mandatory"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pb-12 pt-4 max-w-[1200px] mx-auto"
           >
-            {categories.map((cat) => (
+            {categories.slice(0, 8).map((cat) => (
               <Link
                 key={cat.id}
                 to="/menu"
-                className="group relative flex-shrink-0 w-[290px] md:w-[380px] mr-6 bg-white rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 snap-center hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-stone-100 block"
+                className="group relative w-full bg-white rounded-2xl overflow-hidden shadow-lg shadow-gray-200/40 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-500 transform hover:-translate-y-1.5 cursor-pointer border border-stone-100 block"
               >
                 <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
                   <div className="absolute inset-0 bg-emerald-950/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
@@ -116,15 +97,15 @@ export function ProductsSection() {
                   />
                 </div>
 
-                <figcaption className="p-8 relative">
+                <figcaption className="p-5 relative">
                   <div className="flex justify-between items-center bg-white">
                     <span
-                      className="text-2xl font-bold text-gray-900 group-hover:text-emerald-900 transition-colors duration-300 font-souvenir"
+                      className="text-lg font-bold text-gray-900 group-hover:text-emerald-900 transition-colors duration-300 font-souvenir"
                     >
                       {cat.title}
                     </span>
-                    <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-white transition-all duration-300 shrink-0">
-                      <ArrowRight className="w-5 h-5" />
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-white transition-all duration-300 shrink-0">
+                      <ArrowRight className="w-4 h-4" />
                     </div>
                   </div>
                 </figcaption>
@@ -139,23 +120,6 @@ export function ProductsSection() {
             )}
           </div>
 
-          {/* Boutons de scroll floatants */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-2 md:left-4 z-20">
-            <button
-              onClick={scrollLeft}
-              className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl text-emerald-900 hover:bg-emerald-900 hover:text-white hover:scale-110 transition-all duration-300 border border-stone-200"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="absolute top-1/2 -translate-y-1/2 right-2 md:right-4 z-20">
-            <button
-              onClick={scrollRight}
-              className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl text-emerald-900 hover:bg-emerald-900 hover:text-white hover:scale-110 transition-all duration-300 border border-stone-200"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          </div>
 
         </div>
       </div>

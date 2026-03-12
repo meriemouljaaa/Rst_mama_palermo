@@ -15,3 +15,33 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@layer components {
+  .animate-notification {
+    animation: slide-down-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes slide-down-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes progress-shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.animate-progress {
+  animation: progress-shrink 3s linear forwards;
+}
+
+.pause-animation .animate-progress {
+  animation-play-state: paused !important;
+}

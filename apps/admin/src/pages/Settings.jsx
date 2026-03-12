@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import Toast from '../components/Toast';
 import { Store, Clock, Users, Building, Mail, Phone, MapPin, Save, Shield, Info } from 'lucide-react';
 
 export default function Settings() {
@@ -13,15 +15,13 @@ export default function Settings() {
     return (
         <div className="max-w-5xl relative">
             {/* Notifications */}
-            {notification && (
-                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
-                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
-                }`}>
-                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
-                        <Info size={14} />
-                    </div>
-                    {notification.message}
-                </div>
+            {notification && createPortal(
+                <Toast 
+                    message={notification.message} 
+                    type={notification.type} 
+                    onClose={() => setNotification(null)} 
+                />,
+                document.body
             )}
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-gray-900">Settings</h2>

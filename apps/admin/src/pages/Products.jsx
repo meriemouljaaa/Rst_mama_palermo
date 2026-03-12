@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import Toast from '../components/Toast';
 import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload, Tag, AlignLeft, Info, DollarSign, Filter, ChevronDown, Search } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : `http://${window.location.hostname}:5000/api/products`;
@@ -213,15 +215,13 @@ export default function Products() {
     return (
         <div className="h-full flex flex-col overflow-hidden">
             {/* Notifications */}
-            {notification && (
-                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
-                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
-                }`}>
-                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
-                        <Info size={14} />
-                    </div>
-                    {notification.message}
-                </div>
+            {notification && createPortal(
+                <Toast 
+                    message={notification.message} 
+                    type={notification.type} 
+                    onClose={() => setNotification(null)} 
+                />,
+                document.body
             )}
 
             {/* Sticky Header */}

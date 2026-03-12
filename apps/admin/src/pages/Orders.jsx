@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { io } from 'socket.io-client';
+import Toast from '../components/Toast';
 import {
     Clock,
     ChefHat,
@@ -18,8 +20,10 @@ import {
     User,
     MapPin,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Info
 } from 'lucide-react';
+
 
 export default function Orders() {
     const [orders, setOrders] = useState([]);
@@ -36,7 +40,11 @@ export default function Orders() {
             const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
             const res = await fetch(`${API_BASE}/api/orders`);
             const data = await res.json();
-            setOrders(data);
+            if (Array.isArray(data)) {
+                setOrders(data);
+            } else {
+                console.error('API did not return an array of orders', data);
+            }
         } catch (err) {
             console.error('Failed to fetch orders', err);
         } finally {
@@ -55,19 +63,24 @@ export default function Orders() {
     }, []);
 
     const updateStatus = async (id, status) => {
+        const previousOrders = [...orders];
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+
         try {
             const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
-            await fetch(`${API_BASE}/api/orders/${id}/status`, {
+            const res = await fetch(`${API_BASE}/api/orders/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
             });
+
+            if (!res.ok) throw new Error('Failed to update status on server');
+
             setNotification({ message: `Order #${id} status updated to ${status}!`, type: 'success' });
-            setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error('Failed to update status', err);
+            setOrders(previousOrders);
             setNotification({ message: 'Failed to update order status.', type: 'error' });
-            setTimeout(() => setNotification(null), 3000);
         }
     };
 
@@ -78,42 +91,44 @@ export default function Orders() {
         { title: 'Delivered', status: 'Delivered', icon: CheckCircle2, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', btnColor: 'bg-gray-400', nextStatus: null, nextLabel: null }
     ];
 
-    const filteredOrders = orders.filter(o =>
-        o.id.toString().includes(searchTerm) ||
+    const safeOrders = Array.isArray(orders) ? orders : [];
+
+    const filteredOrders = safeOrders.filter(o =>
+        o.id?.toString().includes(searchTerm) ||
         `${o.first_name} ${o.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const deliveredOrders = orders.filter(o => o.status === 'Delivered');
+    const deliveredOrders = safeOrders.filter(o => o.status === 'Delivered');
     const avgTimeMinutes = deliveredOrders.length > 0
         ? Math.round(deliveredOrders.reduce((acc, curr) => {
             const start = new Date(curr.created_at);
             const end = new Date(curr.updated_at);
+            if (isNaN(start) || isNaN(end)) return acc;
             return acc + (end - start) / (1000 * 60);
         }, 0) / deliveredOrders.length)
         : 0;
 
     const stats = {
-        total: orders.length,
-        today: orders.filter(o => new Date(o.created_at).toDateString() === new Date().toDateString()).length,
-        revenue: orders.reduce((acc, curr) => acc + parseFloat(curr.total_amount), 0).toFixed(2),
+        total: safeOrders.length,
+        today: safeOrders.filter(o => o.created_at && new Date(o.created_at).toDateString() === new Date().toDateString()).length,
+        revenue: safeOrders.reduce((acc, curr) => {
+            const val = parseFloat(curr.total_amount);
+            return acc + (isNaN(val) ? 0 : val);
+        }, 0).toFixed(2),
         avgTime: avgTimeMinutes || 24
     };
 
     return (
         <div className="h-full flex flex-col space-y-4 overflow-hidden">
-            {/* Notifications */}
-            {notification && (
-                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 font-bold text-xs uppercase tracking-widest ${
-                    notification.type === 'success' ? 'bg-emerald-900 text-white' : 'bg-red-600 text-white'
-                }`}>
-                    <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
-                        <Info size={14} />
-                    </div>
-                    {notification.message}
-                </div>
+            {notification && createPortal(
+                <Toast 
+                    message={notification.message} 
+                    type={notification.type} 
+                    onClose={() => setNotification(null)} 
+                />,
+                document.body
             )}
 
-            {/* Page Header - Simple */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Orders</h2>
 
@@ -131,7 +146,6 @@ export default function Orders() {
                 </div>
             </div>
 
-            {/* Kanban Board */}
             <div className="flex-1 min-h-0 pb-2">
                 <div className="flex h-full gap-4 pb-2">
                     {statusColumns.map((col) => {
@@ -307,12 +321,9 @@ export default function Orders() {
                 </div>
             </div>
 
-            {/* Modal for Order Details */}
             {selectedOrder && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm transition-all duration-300 animate-in fade-in" onClick={() => setSelectedOrder(null)}>
                     <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-xl overflow-hidden transform transition-all scale-100 flex flex-col max-h-[90vh] md:max-h-[85vh] animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-
-                        {/* Modal Header */}
                         <div className="p-4 sm:px-6 border-b border-gray-100 flex justify-between items-start bg-white relative overflow-hidden shrink-0">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 to-orange-500"></div>
                             <div>
@@ -330,10 +341,7 @@ export default function Orders() {
                             </button>
                         </div>
 
-                        {/* Modal Body */}
                         <div className="p-4 sm:px-6 overflow-y-auto custom-scrollbar flex-1 space-y-4 bg-gray-50/30">
-
-                            {/* Customer Card */}
                             <div className="bg-white rounded-[16px] p-3.5 border border-gray-100 shadow-sm flex items-start gap-3 transition-all">
                                 <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
                                     <User size={18} strokeWidth={2.5} />
@@ -355,7 +363,6 @@ export default function Orders() {
                                 </div>
                             </div>
 
-                            {/* Order Manifest */}
                             <div>
                                 <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2 px-1">
                                     <span className="w-2 h-[2px] bg-red-500/30 rounded-full"></span>
@@ -389,7 +396,6 @@ export default function Orders() {
                                 </div>
                             </div>
 
-                            {/* Notes & Payment */}
                             {(selectedOrder.notes || selectedOrder.payment_method) && (
                                 <div>
                                     <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2 px-1">
@@ -413,12 +419,6 @@ export default function Orders() {
                                                             {selectedOrder.payment_status || 'Unpaid'}
                                                         </span>
                                                     </div>
-                                                    {selectedOrder.transaction_id && (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded-md shrink-0">Trans. ID</span>
-                                                            <span className="text-[10px] font-medium text-gray-500 font-mono truncate">{selectedOrder.transaction_id}</span>
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                             {selectedOrder.notes && (

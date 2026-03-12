@@ -112,6 +112,7 @@ export default function Menu() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [hydratedCategories, setHydratedCategories] = useState(new Set());
+  const [excludedIngredients, setExcludedIngredients] = useState([]);
 
   const CATEGORY_STYLE_META = useMemo(() => ({
     "pizzas": { banner: pizzaImg, subtitle: "Artisanales & Cuites au feu de bois" },
@@ -160,7 +161,8 @@ export default function Menu() {
             description: p.description,
             price: `${p.price} DH`,
             image: getImageUrl(p.image_url),
-            variants: p.variants || []
+            variants: p.variants || [],
+            removableIngredients: p.removable_ingredients || []
           }));
           if (items.length === 0) return null;
           const meta = CATEGORY_STYLE_META[root.name.toLowerCase()] || {};
@@ -217,8 +219,13 @@ export default function Menu() {
 
   const addToCart = (product, qty, e) => {
     const effectivePrice = selectedVariant ? `${selectedVariant.price} DH` : product.price;
-    const effectiveName = selectedVariant ? `${product.name} (${selectedVariant.name})` : product.name;
-    const effectiveId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id;
+    let effectiveName = selectedVariant ? `${product.name} (${selectedVariant.name})` : product.name;
+
+    let effectiveId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id;
+    // Append excluded ingredients to ID to ensure unique cart entries for different customizations
+    if (excludedIngredients.length > 0) {
+      effectiveId += `_no_${excludedIngredients.join('_')}`;
+    }
 
     if (e) {
       const rect = e.currentTarget.getBoundingClientRect();
@@ -234,13 +241,13 @@ export default function Menu() {
     setCart(prev => {
       const existing = prev.find(item => item.id === effectiveId);
       if (existing) return prev.map(item => item.id === effectiveId ? { ...item, quantity: item.quantity + qty } : item);
-      return [...prev, { ...product, id: effectiveId, name: effectiveName, price: effectivePrice, dbId: productMapping[product.name.toLowerCase().trim()], variant_name: selectedVariant?.name || null, quantity: qty }];
+      return [...prev, { ...product, id: effectiveId, name: effectiveName, price: effectivePrice, dbId: productMapping[product.name.toLowerCase().trim()], variant_name: selectedVariant?.name || null, excluded_ingredients: excludedIngredients, quantity: qty }];
     });
     setSelectedProduct(null);
   };
 
   const handleQuickAdd = (product, qty, e) => {
-    if (product.variants?.length > 0) {
+    if (product.variants?.length > 0 || product.removableIngredients?.length > 0) {
       setSelectedProduct(product);
     } else {
       addToCart(product, qty, e);
@@ -317,6 +324,7 @@ export default function Menu() {
   useEffect(() => {
     if (selectedProduct) {
       setQuantity(1);
+      setExcludedIngredients([]);
       if (selectedProduct.variants?.length > 0) {
         setSelectedVariant(selectedProduct.variants[0]);
       } else {
@@ -324,6 +332,7 @@ export default function Menu() {
       }
     } else {
       setSelectedVariant(null);
+      setExcludedIngredients([]);
     }
   }, [selectedProduct]);
 
@@ -353,7 +362,7 @@ export default function Menu() {
       const customer = await cRes.json();
       const orderRes = await fetch(`${API_BASE}/api/orders`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customer_id: customer.id, total_amount: cartTotal, notes: checkoutForm.notes, items: cart.map(i => ({ product_id: i.dbId || null, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(i.price.replace(" DH", "")), variant_name: i.variant_name })), payment_method: checkoutForm.payment_method })
+        body: JSON.stringify({ customer_id: customer.id, total_amount: cartTotal, notes: checkoutForm.notes, items: cart.map(i => ({ product_id: i.dbId || null, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(i.price.replace(" DH", "")), variant_name: i.variant_name || null, excluded_ingredients: i.excluded_ingredients || [] })), payment_method: checkoutForm.payment_method })
       });
       
       const orderData = await orderRes.json();
@@ -482,6 +491,29 @@ export default function Menu() {
                   </div>
                 </div>
               )}
+
+              {selectedProduct.removableIngredients?.length > 0 && (
+                <div className="mb-8">
+                   <h4 className="text-[10px] font-bold text-emerald-900 uppercase tracking-widest mb-3">Personnalisation</h4>
+                   <div className="flex flex-wrap gap-2">
+                      {selectedProduct.removableIngredients.map(ing => (
+                        <button 
+                          key={ing}
+                          onClick={() => {
+                            setExcludedIngredients(prev => 
+                              prev.includes(ing) ? prev.filter(i => i !== ing) : [...prev, ing]
+                            );
+                          }}
+                          className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all border-2 flex items-center gap-2 ${excludedIngredients.includes(ing) ? 'border-gray-200 bg-gray-50 text-gray-400' : 'border-emerald-100 bg-emerald-50 text-emerald-900 shadow-sm'}`}
+                        >
+                          {excludedIngredients.includes(ing) ? <s>{ing}</s> : ing}
+                          {excludedIngredients.includes(ing) ? <span>✕</span> : <span className="text-emerald-400">✓</span>}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+              )}
+
               <div className="mt-auto flex items-center gap-4">
                 <button onClick={(e) => addToCart(selectedProduct, quantity, e)} className="flex-1 bg-[#C03434] text-white h-16 rounded-xl font-bold uppercase shadow-lg">Ajouter au panier</button>
               </div>

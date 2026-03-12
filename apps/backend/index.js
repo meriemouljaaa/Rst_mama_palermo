@@ -108,7 +108,8 @@ app.get('/api/products', async (req, res) => {
                        SELECT json_agg(json_build_object('id', v.id, 'name', v.name, 'price', v.price)) 
                        FROM product_variants v 
                        WHERE v.product_id = p.id
-                   ), '[]') as variants
+                   ), '[]') as variants,
+                   p.removable_ingredients
             FROM products p 
             ORDER BY p.id ASC
         `);
@@ -343,7 +344,8 @@ app.get('/api/orders', async (req, res) => {
                         'id', oi.id,
                         'product_name', COALESCE(oi.product_name, p.name, 'Article Web'),
                         'quantity', oi.quantity,
-                        'unit_price', oi.unit_price
+                        'unit_price', oi.unit_price,
+                        'excluded_ingredients', oi.excluded_ingredients
                     ))
                     FROM order_items oi
                     LEFT JOIN products p ON oi.product_id = p.id
@@ -375,8 +377,8 @@ app.post('/api/orders', async (req, res) => {
         if (items && items.length > 0) {
             const itemQueries = items.map(item =>
                 client.query(
-                    'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, variant_name) VALUES ($1, $2, $3, $4, $5, $6)',
-                    [orderId, item.product_id, item.product_name, item.quantity, item.unit_price, item.variant_name || null]
+                    'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, variant_name, excluded_ingredients) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                    [orderId, item.product_id, item.product_name, item.quantity, item.unit_price, item.variant_name || null, JSON.stringify(item.excluded_ingredients || [])]
                 )
             );
             await Promise.all(itemQueries);
@@ -393,7 +395,8 @@ app.post('/api/orders', async (req, res) => {
                         'product_name', COALESCE(oi.product_name, p.name, 'Article Web'),
                         'quantity', oi.quantity,
                         'unit_price', oi.unit_price,
-                        'variant_name', oi.variant_name
+                        'variant_name', oi.variant_name,
+                        'excluded_ingredients', oi.excluded_ingredients
                     ))
                     FROM order_items oi
                     LEFT JOIN products p ON oi.product_id = p.id

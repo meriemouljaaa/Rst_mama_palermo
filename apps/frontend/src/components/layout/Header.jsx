@@ -37,10 +37,12 @@ export function Header({ scrollToSection, refs }) {
     }
   };
 
+  const isSolid = isScrolled || location.pathname !== '/';
+
   return (
     <header
-      className={`fixed box-border w-full z-[100] left-0 top-0 transition-all duration-500 ease-in-out ${isScrolled
-        ? "h-[65px] md:h-[70px] bg-white/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] border-b border-white/20"
+      className={`fixed box-border w-full z-[100] left-0 top-0 transition-all duration-500 ease-in-out ${isSolid
+        ? "h-[65px] md:h-[70px] bg-white/90 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] border-b border-white/20"
         : "h-[80px] md:h-[100px] bg-transparent"
         } ${isMenuOpen ? "h-screen bg-emerald-950 shadow-none !backdrop-blur-none" : ""}`}
     >
@@ -50,11 +52,11 @@ export function Header({ scrollToSection, refs }) {
       >
         <Link
           to="/"
-          className={`relative flex items-center self-center transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"
+          className={`relative flex items-center self-center transition-all duration-500 ${isSolid ? "scale-90" : "scale-100"
             }`}
         >
           <img
-            src={isScrolled ? standardLogo : whiteLogo}
+            src={isSolid && !isMenuOpen ? standardLogo : whiteLogo}
             alt="Mamma Palermo"
             className="h-[45px] md:h-[55px] w-auto object-contain transition-all duration-500"
           />
@@ -67,11 +69,11 @@ export function Header({ scrollToSection, refs }) {
           onClick={toggleMenu}
         >
           <div className="flex flex-col gap-1.5 w-8">
-            <span className={`h-[2px] w-8 rounded-full transition-all duration-300 ${isScrolled && !isMenuOpen ? "bg-emerald-900" : "bg-white"
+            <span className={`h-[2px] w-8 rounded-full transition-all duration-300 ${isSolid && !isMenuOpen ? "bg-emerald-900" : "bg-white"
               } ${isMenuOpen ? "rotate-45 translate-y-[8px]" : ""}`}></span>
-            <span className={`h-[2px] w-5 rounded-full transition-all duration-300 ${isScrolled && !isMenuOpen ? "bg-emerald-900" : "bg-white"
+            <span className={`h-[2px] w-5 rounded-full transition-all duration-300 ${isSolid && !isMenuOpen ? "bg-emerald-900" : "bg-white"
               } ${isMenuOpen ? "opacity-0 translate-x-2" : "ml-auto"}`}></span>
-            <span className={`h-[2px] w-8 rounded-full transition-all duration-300 ${isScrolled && !isMenuOpen ? "bg-emerald-900" : "bg-white"
+            <span className={`h-[2px] w-8 rounded-full transition-all duration-300 ${isSolid && !isMenuOpen ? "bg-emerald-900" : "bg-white"
               } ${isMenuOpen ? "-rotate-45 -translate-y-[8px]" : ""}`}></span>
           </div>
         </button>

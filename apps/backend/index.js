@@ -121,13 +121,13 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { name, description, price, category, image_url, is_available, variants } = req.body;
+    const { name, description, price, category, image_url, is_available, variants, removable_ingredients } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
         const result = await client.query(
-            'INSERT INTO products (name, description, price, category_id, image_url, is_available) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [name, description, price, category, image_url, is_available]
+            'INSERT INTO products (name, description, price, category_id, image_url, is_available, removable_ingredients) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [name, description, price, category, image_url, is_available, JSON.stringify(removable_ingredients || [])]
         );
         const productId = result.rows[0].id;
 
@@ -153,7 +153,7 @@ app.post('/api/products', async (req, res) => {
 
 app.put('/api/products/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description, price, category, image_url, is_available, variants } = req.body;
+    const { name, description, price, category, image_url, is_available, variants, removable_ingredients } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -162,8 +162,8 @@ app.put('/api/products/:id', async (req, res) => {
         const oldImageUrl = oldProductRes.rows[0]?.image_url;
 
         const result = await client.query(
-            'UPDATE products SET name = $1, description = $2, price = $3, category_id = $4, image_url = $5, is_available = $6 WHERE id = $7 RETURNING *',
-            [name, description, price, category, image_url, is_available, id]
+            'UPDATE products SET name = $1, description = $2, price = $3, category_id = $4, image_url = $5, is_available = $6, removable_ingredients = $7 WHERE id = $8 RETURNING *',
+            [name, description, price, category, image_url, is_available, JSON.stringify(removable_ingredients || []), id]
         );
 
         if (result.rows.length === 0) {

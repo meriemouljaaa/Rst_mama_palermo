@@ -22,7 +22,8 @@ export default function Products() {
         category_id: '',
         image_url: '',
         is_available: true,
-        variants: []
+        variants: [],
+        removable_ingredients: []
     });
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -58,11 +59,12 @@ export default function Products() {
                 category_id: product.category_id || '',
                 image_url: product.image_url || '',
                 is_available: product.is_available,
-                variants: product.variants || []
+                variants: product.variants || [],
+                removable_ingredients: product.removable_ingredients || []
             });
         } else {
             setEditingProduct(null);
-            setFormData({ name: '', description: '', price: '', category_id: categories.length > 0 ? categories[0].id : '', image_url: '', is_available: true, variants: [] });
+            setFormData({ name: '', description: '', price: '', category_id: categories.length > 0 ? categories[0].id : '', image_url: '', is_available: true, variants: [], removable_ingredients: [] });
         }
         setSelectedFile(null);
         setIsModalOpen(true);
@@ -88,6 +90,22 @@ export default function Products() {
             newVariants[index] = { ...newVariants[index], [field]: value };
             return { ...prev, variants: newVariants };
         });
+    };
+
+    const addIngredient = (name) => {
+        if (!name.trim()) return;
+        if (formData.removable_ingredients.includes(name.trim())) return;
+        setFormData(prev => ({
+            ...prev,
+            removable_ingredients: [...prev.removable_ingredients, name.trim()]
+        }));
+    };
+
+    const removeIngredient = (name) => {
+        setFormData(prev => ({
+            ...prev,
+            removable_ingredients: prev.removable_ingredients.filter(i => i !== name)
+        }));
     };
 
     const handleCloseModal = () => setIsModalOpen(false);
@@ -517,6 +535,56 @@ export default function Products() {
                                         </div>
                                     </div>
 
+                                    {/* Ingredients Section */}
+                                    <div className="space-y-3 pt-2 border-t border-gray-100/50">
+                                        <div className="flex items-center justify-between">
+                                            <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                <AlignLeft size={12} className="text-red-500" /> Ingrédients Personnalisables (Retirables)
+                                            </label>
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {formData.removable_ingredients.map(ing => (
+                                                <span key={ing} className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-[11px] font-black border border-emerald-100">
+                                                    {ing}
+                                                    <button type="button" onClick={() => removeIngredient(ing)} className="hover:text-red-500 transition-colors">
+                                                        <X size={12} strokeWidth={3} />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                            {formData.removable_ingredients.length === 0 && (
+                                                <p className="text-[10px] text-gray-400 font-bold italic py-1">Aucun ingrédient retirable configuré.</p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text"
+                                                id="new-ingredient-input"
+                                                placeholder="Ajouter un ingrédient (ex: Oignons)"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        addIngredient(e.target.value);
+                                                        e.target.value = '';
+                                                    }
+                                                }}
+                                                className="flex-1 border border-gray-100 rounded-xl px-4 py-2 text-sm font-bold text-gray-900 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                            />
+                                            <button 
+                                                type="button"
+                                                onClick={() => {
+                                                    const input = document.getElementById('new-ingredient-input');
+                                                    addIngredient(input.value);
+                                                    input.value = '';
+                                                }}
+                                                className="bg-emerald-600 hover:bg-black text-white px-4 py-2 rounded-xl font-bold text-[10px] uppercase transition-all"
+                                            >
+                                                Ajouter
+                                            </button>
+                                        </div>
+                                        <p className="text-[9px] text-gray-400 font-bold italic tracking-tight">Appuyez sur Entrée pour ajouter rapidement.</p>
+                                    </div>
                                 </div>
                             </div>
 

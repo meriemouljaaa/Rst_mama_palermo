@@ -33,7 +33,7 @@ export default function Orders() {
     const fetchOrders = async (silent = false) => {
         try {
             if (!silent) setIsLoading(true);
-            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
             const res = await fetch(`${API_BASE}/api/orders`);
             const data = await res.json();
             setOrders(data);
@@ -47,7 +47,7 @@ export default function Orders() {
     useEffect(() => {
         fetchOrders();
 
-        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        const socket = io(import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`);
         socket.on('orderStatusChanged', () => fetchOrders(true));
         socket.on('newOrder', () => fetchOrders(true));
 
@@ -56,7 +56,7 @@ export default function Orders() {
 
     const updateStatus = async (id, status) => {
         try {
-            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
             await fetch(`${API_BASE}/api/orders/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

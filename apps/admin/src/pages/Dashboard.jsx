@@ -26,7 +26,7 @@ export default function Dashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
             const statsRes = await fetch(`${API_BASE}/api/dashboard/stats`);
             const statsData = await statsRes.json();
             setStats(statsData);
@@ -42,7 +42,7 @@ export default function Dashboard() {
     useEffect(() => {
         fetchDashboardData();
 
-        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        const socket = io(import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`);
 
         socket.on('orderStatusChanged', (data) => {
             console.log('Order status updated:', data);

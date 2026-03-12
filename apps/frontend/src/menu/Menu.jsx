@@ -126,10 +126,8 @@ export default function Menu() {
 
   const getImageUrl = (url) => {
     if (!url) return null;
-    if (url.includes('localhost:3001')) {
-      return url.replace('localhost:3001', 'localhost:5000');
-    }
-    return url;
+    // Replace both localhost and hardcoded IP with current hostname to ensure images load on any device
+    return url.replace(/localhost|192\.168\.\d+\.\d+/, window.location.hostname).replace(':3001', ':5000');
   };
 
   useEffect(() => {
@@ -141,7 +139,7 @@ export default function Menu() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
         const [prodRes, catRes] = await Promise.all([
           fetch(`${API_BASE}/api/products`),
           fetch(`${API_BASE}/api/categories`)
@@ -185,7 +183,7 @@ export default function Menu() {
     };
     fetchData();
 
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    const socket = io(import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`);
     socket.on('productUpdated', fetchData);
     socket.on('newOrder', fetchData); // In case we want to refresh for other reasons
 
@@ -341,7 +339,7 @@ export default function Menu() {
       const firstName = names[0] || '';
       const lastName = names.slice(1).join(' ') || '.';
 
-      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
       const cRes = await fetch(`${API_BASE}/api/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

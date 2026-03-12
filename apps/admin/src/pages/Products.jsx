@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, X, Image as ImageIcon, Upload, Tag, AlignLeft, Info, DollarSign, Filter, ChevronDown, Search } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : 'http://localhost:5000/api/products';
-const CATEGORY_API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : 'http://localhost:5000/api/categories';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : `http://${window.location.hostname}:5000/api/products`;
+const CATEGORY_API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : `http://${window.location.hostname}:5000/api/categories`;
 
 export default function Products() {
     const [products, setProducts] = useState([]);
@@ -24,6 +24,10 @@ export default function Products() {
     });
 
     const [selectedFile, setSelectedFile] = useState(null);
+    const getImageUrl = (url) => {
+        if (!url) return null;
+        return url.replace(/localhost|192\.168\.\d+\.\d+/, window.location.hostname).replace(':3001', ':5000');
+    };
 
     const fetchData = async () => {
         try {
@@ -95,7 +99,7 @@ export default function Products() {
                 const uploadData = new FormData();
                 uploadData.append('image', selectedFile);
 
-                const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload`, {
+                const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`}/api/upload`, {
                     method: 'POST',
                     body: uploadData
                 });
@@ -286,7 +290,7 @@ export default function Products() {
                                 <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="p-4">
                                         {p.image_url ? (
-                                            <img src={p.image_url} alt={p.name} className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
+                                            <img src={getImageUrl(p.image_url)} alt={p.name} className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
                                         ) : (
                                             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
                                                 <ImageIcon size={20} />
@@ -366,7 +370,7 @@ export default function Products() {
                                             <div className="relative aspect-square w-full rounded-xl bg-white border-2 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden group hover:border-red-400 transition-colors shadow-inner">
                                                 {selectedFile || formData.image_url ? (
                                                     <img
-                                                        src={selectedFile ? URL.createObjectURL(selectedFile) : formData.image_url}
+                                                        src={selectedFile ? URL.createObjectURL(selectedFile) : getImageUrl(formData.image_url)}
                                                         alt="Preview"
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                                     />

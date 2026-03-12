@@ -55,8 +55,9 @@ services:
     command: npm run dev -- --host
     ports:
       - "5001:5173"
-    environment:
-      VITE_API_URL: http://localhost:5000
+    # VITE_API_URL removed to allow dynamic detection via window.location.hostname
+    links:
+      - backend:backend
     volumes:
       - ./apps/frontend:/app
       - /app/node_modules
@@ -72,8 +73,9 @@ services:
     command: npm run dev -- --host --port 5174
     ports:
       - "5002:5174"
-    environment:
-      VITE_API_URL: http://localhost:5000
+    # VITE_API_URL removed to allow dynamic detection via window.location.hostname
+    links:
+      - backend:backend
     volumes:
       - ./apps/admin:/app
       - /app/node_modules

@@ -18,8 +18,8 @@ import {
     Upload
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : 'http://localhost:5000/api/categories';
-const PRODUCTS_API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : 'http://localhost:5000/api/products';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/categories` : `http://${window.location.hostname}:5000/api/categories`;
+const PRODUCTS_API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/products` : `http://${window.location.hostname}:5000/api/products`;
 
 export default function Categories() {
     const [categories, setCategories] = useState([]);
@@ -30,6 +30,11 @@ export default function Categories() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState(null);
     const [notification, setNotification] = useState(null);
+
+    const getImageUrl = (url) => {
+        if (!url) return null;
+        return url.replace(/localhost|192\.168\.\d+\.\d+/, window.location.hostname).replace(':3001', ':5000');
+    };
 
     const [formData, setFormData] = useState({
         name: '',
@@ -96,7 +101,7 @@ export default function Categories() {
                 const uploadData = new FormData();
                 uploadData.append('image', selectedFile);
 
-                const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
                 const uploadRes = await fetch(`${API_BASE}/api/upload`, {
                     method: 'POST',
                     body: uploadData
@@ -234,7 +239,7 @@ export default function Categories() {
                                     <div className="flex gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-100 overflow-hidden relative">
                                             {parent.image_url ? (
-                                                <img src={parent.image_url} alt={parent.name} className="w-full h-full object-cover" />
+                                                <img src={getImageUrl(parent.image_url)} alt={parent.name} className="w-full h-full object-cover" />
                                             ) : (
                                                 <LayoutGrid size={24} />
                                             )}
@@ -284,7 +289,7 @@ export default function Categories() {
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-6 h-6 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
                                                                 {sub.image_url ? (
-                                                                    <img src={sub.image_url} alt={sub.name} className="w-full h-full object-cover" />
+                                                                    <img src={getImageUrl(sub.image_url)} alt={sub.name} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <CornerDownRight size={14} className="text-gray-300" />
                                                                 )}
@@ -393,11 +398,11 @@ export default function Categories() {
                                     <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Visual</label>
                                     <div className="relative aspect-square w-full rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden group hover:border-red-400 transition-colors">
                                         {selectedFile || formData.image_url ? (
-                                            <img
-                                                src={selectedFile ? URL.createObjectURL(selectedFile) : formData.image_url}
-                                                alt="Preview"
-                                                className="w-full h-full object-cover"
-                                            />
+                                                <img
+                                                    src={selectedFile ? URL.createObjectURL(selectedFile) : getImageUrl(formData.image_url)}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                />
                                         ) : (
                                             <div className="flex flex-col items-center text-gray-300">
                                                 <ImageIcon size={20} />

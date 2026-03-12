@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Search, Users, Calendar, ArrowRight, User, MoreVertical, Filter, ChevronDown } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/customers` : 'http://localhost:5000/api/customers';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/customers` : `http://${window.location.hostname}:5000/api/customers`;
 
 export default function Customers() {
     const [customers, setCustomers] = useState([]);

@@ -28,16 +28,13 @@ export function ProductsSection() {
 
   const getImageUrl = (url) => {
     if (!url) return null;
-    if (url.includes('localhost:3001')) {
-      return url.replace('localhost:3001', 'localhost:5000');
-    }
-    return url;
+    return url.replace(/localhost|192\.168\.\d+\.\d+/, window.location.hostname).replace(':3001', ':5000');
   };
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
         const res = await fetch(`${API_BASE}/api/categories`);
         const data = await res.json();
         

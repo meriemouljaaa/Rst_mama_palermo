@@ -86,12 +86,21 @@ export default function App() {
 
   // Global socket notification
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000");
+    const socket = io(import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`);
     socket.on("orderStatusChanged", (data) => {
       setNotification(`Order #${data.orderId} is now: ${data.status}`);
       setTimeout(() => setNotification(null), 5000);
     });
     return () => socket.disconnect();
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   return (
@@ -112,10 +121,18 @@ export default function App() {
               </div>
             )}
             <AnimatedRoutes isLoading={isLoading} aboutRef={aboutRef} conceptRef={conceptRef} scrollToSection={scrollToSection} />
-            <Footer refs={{ aboutRef, conceptRef }} />
+            <FooterWrapper isMobile={isMobile} aboutRef={aboutRef} conceptRef={conceptRef} />
           </div>
         )}
       </div>
     </Router>
   );
+}
+
+function FooterWrapper({ isMobile, aboutRef, conceptRef }) {
+  const location = useLocation();
+  const isMenuMobile = isMobile && location.pathname === "/menu";
+  
+  if (isMenuMobile) return null;
+  return <Footer refs={{ aboutRef, conceptRef }} />;
 }

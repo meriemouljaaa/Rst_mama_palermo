@@ -132,3 +132,6 @@ dist-ssr/
 
 # Drafts
 drafts/
+
+# Backup
+backup/
